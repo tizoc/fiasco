@@ -110,11 +110,19 @@ module Fiasco
     end
 
     def [](url_pattern, options = {})
-      # TODO: add support for default argumets
+      defaults = options.fetch(:defaults, {})
       methods = options.fetch(:methods, %w[GET])
       partial = options.fetch(:partial, false)
-      matcher = Matcher.new([lambda{|env, _| methods.include?(env["REQUEST_METHOD"])},
-                             @url_match.new(url_pattern, partial)])
+      set_defaults = lambda{|_, captures|
+        defaults.each{|k,v| captures.named[k.to_s] = v}
+      }
+      check_method = lambda{|env, _|
+        methods.include?(env["REQUEST_METHOD"])
+      }
+      match_path = @url_match.new(url_pattern, partial)
+
+      matcher = Matcher.new([set_defaults, check_method, match_path])
+
       @stack.push(matcher)
     end
 
