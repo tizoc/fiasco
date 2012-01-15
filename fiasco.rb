@@ -94,11 +94,10 @@ module Fiasco
     end
 
     def bind(o)
-      # TODO: force '@rule' as the name and avoid the global?
-      $__rule = rule.tap do
+      @@current_rule = rule.tap do
         def o.method_added(name)
           super
-          $__rule.register(self, name)
+          @@current_rule.register(self, name)
         end
       end
     end
