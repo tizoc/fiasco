@@ -10,12 +10,16 @@ module Fiasco
     }
 
     def initialize(pattern, partial)
+      @types = {}
       rest = pattern
       segments = []
 
       while match = CAPTURE_RE.match(rest)
-        segments.push [match['static'], nil] unless match['static'].empty?
-        segments.push [match['name'], match['type'] || 'string']
+        static, name, type =
+          match['static'], match['name'], match['type'] || 'string'
+        @types[name] = type
+        segments.push [static, nil] unless match['static'].empty?
+        segments.push [name, type]
         rest = match.post_match
       end
 
@@ -35,12 +39,11 @@ module Fiasco
     end
 
     def call(env, captures)
-      # TODO convert capture types
       @pattern.match(env["PATH_INFO"]).tap do |match|
         if match
           captures.matched = match.to_s
           match.names.each do |name|
-            captures.named[name] = match[name]
+            captures.named[name] = CONVERTERS[@types[name]].call(match[name])
           end
 
           captures.remaining = match.post_match
