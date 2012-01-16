@@ -90,20 +90,20 @@ module Fiasco
     end
 
     def rule(path_matcher = @default_path_matcher)
-      RuleStack.new(@rules, path_matcher)
-    end
-
-    def bind(o)
-      @@current_rule = rule.tap do
-        def o.method_added(name)
-          super
-          @@current_rule.register(self, name)
-        end
-      end
+      RuleBinder.new(@rules, path_matcher)
     end
   end
 
-  class RuleStack
+  class RuleBinder
+    def self.bind(mod, app)
+      @@__fiasco__current_rulebinder = app.rule.tap do
+        def mod.method_added(name)
+          super
+          @@__fiasco__current_rulebinder.register(self, name)
+        end
+      end
+    end
+
     def initialize(registry, url_matcher_klass)
       @registry, @stack, @url_match = registry, [], url_matcher_klass
     end
