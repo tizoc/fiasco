@@ -55,6 +55,11 @@ $render.declare 'hello', contents: <<-EOT
 EOT
 
 module BasicHandler
+  # Creates a mapper to define the routes
+  # There is no need to assign this to an instance variable,
+  # the only advantage in doing so is that if this module
+  # is reopened later or another module is mixed in, the
+  # same mapper can still be referenced.
   @route = Fiasco::Mapper.bind(self, $app)
 
 module_function
