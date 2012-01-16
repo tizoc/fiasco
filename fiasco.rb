@@ -1,4 +1,5 @@
 require 'rack'
+require 'set'
 
 module Fiasco
   Captures = Struct.new('Captures', *%w[matched named remaining])
@@ -87,13 +88,18 @@ module Fiasco
 
   class Mapper
     @@__fiasco__current_mapper = nil
+    @@__fiasco__bound_modules = Set.new
 
     def self.bind(mod, app, path_matcher = app.default_path_matcher)
       new(app, path_matcher).tap do
-        def mod.method_added(name)
-          super
-          if @@__fiasco__current_mapper
-            @@__fiasco__current_mapper.map(self, name)
+        unless @@__fiasco__bound_modules.include?(mod.object_id)
+          @@__fiasco__bound_modules.add(mod.object_id)
+
+          def mod.method_added(name)
+            super
+            if @@__fiasco__current_mapper
+              @@__fiasco__current_mapper.map(self, name)
+            end
           end
         end
       end
