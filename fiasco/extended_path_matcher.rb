@@ -3,7 +3,7 @@ module Fiasco
     ISNAME = "[a-zA-Z_][a-zA-Z0-9_]"
     NAME_CAPTURE_RE = /<([^>]+)>/
     CAPTURE_RE =
-      %r{^(?<static>[^<]*)<(?:(?<type>#{ISNAME}*):)(?<name>#{ISNAME}*)>}
+      %r{^(?<static>[^<]*)<(?:(?<type>#{ISNAME}*):)?(?<name>#{ISNAME}*)>}
     CONVERTERS = {
       'int' => lambda {|v| v.to_i},
       'string' => lambda{|v| v}
