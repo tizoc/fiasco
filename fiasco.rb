@@ -22,8 +22,8 @@ module Fiasco
     end
   end
 
-  Rule = Struct.new('Rule', *%w[matcher bound handler params])
-  class Rule
+  Mapping = Struct.new('Mapping', *%w[matcher bound handler params])
+  class Mapping
     def invoke(target, captures)
       # TODO: handle SCRIPT_NAME and captures.remaining?
       handler_params = calculate_params(target, captures)
@@ -38,11 +38,11 @@ module Fiasco
   end
 
   class Application
-    attr_reader :env, :request, :response
+    attr_reader :env, :request, :response, :mappings, :default_path_matcher
 
     def initialize(options = {})
       @handlers = []
-      @rules = []
+      @mappings = []
       @default_path_matcher = options.fetch(:default_path_matcher)
     end
 
@@ -63,52 +63,43 @@ module Fiasco
 
     def pass(options = {})
       to, skip = options[:to], options[:skip]
-      targets = to ? [get_target(to)] : @handlers.map(&:first)
+      targets = to ? [to] : @handlers
 
       targets.each do |target|
         next if target.equal?(skip)
 
-        @rules.each do |rule|
-          next unless target.equal?(rule.bound) || target.is_a?(rule.bound)
+        @mappings.each do |mapping|
+          next unless
+            target.equal?(mapping.bound) || target.is_a?(mapping.bound)
 
-          if captures = rule.matcher.matches?(@env)
-            rule.invoke(target, captures)
-            throw(:complete, $app.response.finish)
+          if captures = mapping.matcher.matches?(@env)
+            mapping.invoke(target, captures)
+            throw(:complete, @response.finish)
           end
         end
       end
     end
 
-    def get_target(name)
-      @handlers.each do |target, options|
-        return target if options[:name] == name
-      end
-    end
-
-    def mount(object, options = {})
-      @handlers << [object, options]
-    end
-
-    def rule(path_matcher = @default_path_matcher)
-      RuleBinder.new(@rules, path_matcher)
+    def add_handler(object)
+      @handlers << object
     end
   end
 
-  class RuleBinder
-    def self.bind(mod, app)
-      @@__fiasco__current_rulebinder = app.rule.tap do
+  class Mapper
+    def self.bind(mod, app, path_matcher = app.default_path_matcher)
+      @@__fiasco__current_mapper = new(app, path_matcher).tap do
         def mod.method_added(name)
           super
-          @@__fiasco__current_rulebinder.register(self, name)
+          @@__fiasco__current_mapper.map(self, name)
         end
       end
     end
 
-    def initialize(registry, url_matcher_klass)
-      @registry, @stack, @url_match = registry, [], url_matcher_klass
+    def initialize(app, path_matcher_klass)
+      @app, @stack, @path_match = app, [], path_matcher_klass
     end
 
-    def [](url_pattern, options = {})
+    def push(url_pattern, options = {})
       defaults = options.fetch(:defaults, {})
       methods = options.fetch(:methods, %w[GET])
       partial = options.fetch(:partial, false)
@@ -118,16 +109,17 @@ module Fiasco
       check_method = lambda{|env, _|
         methods.include?(env["REQUEST_METHOD"])
       }
-      match_path = @url_match.new(url_pattern, partial)
+      match_path = @path_match.new(url_pattern, partial)
 
       matcher = Matcher.new([set_defaults, check_method, match_path])
 
       @stack.push(matcher)
     end
+    alias_method :[], :push
 
-    def register(bound, method)
+    def map(target, method)
       while matcher = @stack.pop
-        @registry.push(Rule.new(matcher, bound, method, nil))
+        @app.mappings.push(Mapping.new(matcher, target, method, nil))
       end
     end
   end
