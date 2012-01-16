@@ -86,17 +86,25 @@ module Fiasco
   end
 
   class Mapper
+    @@__fiasco__current_mapper = nil
+
     def self.bind(mod, app, path_matcher = app.default_path_matcher)
-      @@__fiasco__current_mapper = new(app, path_matcher).tap do
+      new(app, path_matcher).tap do
         def mod.method_added(name)
           super
-          @@__fiasco__current_mapper.map(self, name)
+          if @@__fiasco__current_mapper
+            @@__fiasco__current_mapper.map(self, name)
+          end
         end
       end
     end
 
     def initialize(app, path_matcher_klass)
       @app, @stack, @path_match = app, [], path_matcher_klass
+    end
+
+    def make_active!
+      @@__fiasco__current_mapper = self
     end
 
     def push(url_pattern, options = {})
@@ -114,6 +122,8 @@ module Fiasco
       matcher = Matcher.new([set_defaults, check_method, match_path])
 
       @stack.push(matcher)
+
+      make_active!
     end
     alias_method :[], :push
 
