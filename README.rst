@@ -13,9 +13,13 @@ The implementation is intended to be lean and clean like in `Cuba`_.
 Basic Example
 =============
 
-Run::
+Check ``examples/basic.ru``
+
+To run::
 
     rackup examples/basic.ru
+
+And visit http://localhost:9292 with your browser.
 
 .. _Flask: http://flask.pocoo.org
 .. _Jinja2: http://jinja.pocoo.org
