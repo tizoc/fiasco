@@ -13,7 +13,9 @@ The implementation is intended to be lean and clean like in `Cuba`_.
 Basic Example
 =============
 
-TODO
+Run::
+
+    rackup examples/basic.ru
 
 .. _Flask: http://flask.pocoo.org
 .. _Jinja2: http://jinja.pocoo.org
