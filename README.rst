@@ -6,7 +6,7 @@ Summary
 
 Fiasco is a thin layer on top of Rack inspired by `Flask`_, `Jinja2`_ and `Cuba`_.
 
-It provides routing mechanisms similar to what `Flask`_ provides, and context-less template rendering with support for template inheritance similar to `Jinja2`_.
+It provides routing mechanisms similar to what `Flask`_ provides, and template rendering with support for template inheritance and explicit contexts similar to `Jinja2`_.
 
 The implementation is intended to be lean and clean like in `Cuba`_.
 
