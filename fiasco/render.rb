@@ -44,7 +44,7 @@ module Fiasco
 
     def _compile(name, erb, locals = [])
       src = "params ||= {}; @render_output ||= ''\n"
-      locals.each {|var| parts += "#{var} = params[:#{var}]; "}
+      locals.each {|var| src += "#{var} = params[:#{var}]; "}
       src << erb.src
       src << "\n@render_output"
 
