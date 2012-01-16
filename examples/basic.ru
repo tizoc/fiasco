@@ -88,7 +88,9 @@ module_function
   # Types can be specified for the captured fragments
   # This ensures that the fragments match the desired format
   # and that they are converted when passed as params to the handler
-  @route.push "/sum/<int:num1>/<int:num2>"
+  # The captures and the method parameters can be in different order,
+  # they are matched by name.
+  @route.push "/sum/<int:num2>/<int:num1>"
   def sum(num1, num2)
     out num1 + num2
   end
