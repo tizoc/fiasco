@@ -6,10 +6,11 @@ module Fiasco
       %r{^(?<static>[^<]*)<(?:(?<type>#{ISNAME}*):)?(?<name>#{ISNAME}*)>}
     CONVERTERS = {
       'int' => lambda {|v| v.to_i},
-      'string' => lambda{|v| v}
+      'string' => lambda{|v| URI.unescape(v)}
     }
 
-    def initialize(pattern, partial)
+    def initialize(pattern, captures)
+      @captures = captures
       @types = {}
       rest = pattern
       segments = []
@@ -35,7 +36,7 @@ module Fiasco
         end
       end.to_a.join
 
-      @pattern = Regexp.new(re + (partial ? '' : '$'))
+      @pattern = Regexp.new(re + (captures ? '' : '$'))
     end
 
     def call(env, captures)
@@ -46,7 +47,7 @@ module Fiasco
             captures.named[name] = CONVERTERS[@types[name]].call(match[name])
           end
 
-          captures.remaining = match.post_match
+          captures.remaining = match.post_match if @captures
         end
       end
     end

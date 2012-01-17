@@ -55,14 +55,13 @@ module Fiasco
       catch(:complete) do
         pass
 
-        @response.status = 404
-        @response.finish
+        not_found
       end
     ensure
       @env = @request = @response = nil
     end
 
-    def pass(options = {})
+    def _pass(options = {})
       to, skip = options[:to], options[:skip]
       targets = to ? [to] : @handlers
 
@@ -74,11 +73,31 @@ module Fiasco
             target.equal?(mapping.bound) || target.is_a?(mapping.bound)
 
           if captures = mapping.matcher.matches?(@env)
+            @last_captures = captures
             mapping.invoke(target, captures)
             throw(:complete, @response.finish)
           end
         end
       end
+    end
+
+    def pass(options = {})
+      old_path, old_script = @env['PATH_INFO'], @env['SCRIPT_NAME']
+
+      if @last_captures && @last_captures.remaining
+        @env['PATH_INFO'] = '/' + @last_captures.remaining
+        @env['SCRIPT_NAME'] = @last_captures.matched.gsub(%r{/$}, '')
+      end
+
+      _pass(options)
+      not_found
+    ensure
+      @env['PATH_INFO'], @env['SCRIPT_NAME'] = old_path, old_script
+    end
+
+    def not_found
+      @response.status = 404
+      @response.finish
     end
 
     def add_handler(object)
@@ -132,6 +151,10 @@ module Fiasco
       make_active!
     end
     alias_method :[], :push
+
+    def capture(url_pattern, options = {})
+      push(url_pattern, {partial: true}.merge(options))
+    end
 
     def map(target, method)
       while matcher = @stack.pop

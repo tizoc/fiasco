@@ -96,9 +96,22 @@ module_function
   # and that they are converted when passed as params to the handler
   # The captures and the method parameters can be in different order,
   # they are matched by name.
-  @route.push "/sum/<int:num2>/<int:num1>"
+  @route.push("/sum/<int:num2>/<int:num1>")
   def sum(num1, num2)
     out num1 + num2
+  end
+
+  # Mapper#capture defines a "capturing" mapping.
+  # Capturing mappings match paths partially (the first part)
+  # and promote it to SCRIPT_NAME, while replacing PATH_INFO
+  # with the remaining of the path.
+  # This can be used for global before/after hooks (by
+  # matching on "/", or to call subhandlers.
+  # Try visiting "/capturing/Hello/sum/10/33"
+  @route.capture("/capturing/<string:title>/")
+  def capturing(title)
+    out "<h1>#{title}</h1>"
+    $app.pass
   end
 end
 
