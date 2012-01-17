@@ -72,6 +72,7 @@ module_function
   # Route for the root
   @route["/"]
   def home
+    # Render#[] is an alias for Render#render
     out $render['home']
   end
 
