@@ -85,7 +85,7 @@ EOS
       @templates[name] = e
     end
 
-    def render(name, locals = {})
+    def _render(name, locals = {})
       name = name.to_sym
       variables = _process_locals(name, locals)
 
@@ -98,12 +98,18 @@ EOS
       if @extends
         parent, pargs = @extends
         @extends = nil
-        render(parent, *pargs)
+        _render(parent, *pargs)
       end
 
       @render_output
     end
 
-    alias_method :'[]', :render
+    def render(name, locals = {})
+      _render(name, locals)
+    ensure
+      @content_blocks.clear
+    end
+
+    alias_method :[], :render
   end
 end
