@@ -1,6 +1,12 @@
 Fiasco
 ######
 
+fi·as·co
+   noun, plural -cos, -coes.
+
+   #. a complete and ignominious failure.
+   #. a round-bottomed glass flask for wine, especially Chianti, fitted with a woven, protective raffia basket that also enables the bottle to stand upright.
+
 Summary
 =======
 
