@@ -26,7 +26,6 @@ module Fiasco
   Mapping = Struct.new('Mapping', *%w[matcher bound handler params])
   class Mapping
     def invoke(target, captures)
-      # TODO: handle SCRIPT_NAME and captures.remaining?
       handler_params = calculate_params(target, captures)
       target.send(handler, *handler_params)
     end
