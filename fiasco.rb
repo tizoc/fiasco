@@ -2,8 +2,7 @@ require 'rack'
 require 'set'
 
 module Fiasco
-  Captures = Struct.new('Captures', *%w[matched named remaining])
-  class Captures
+  class Captures < Struct.new(:matched, :named, :remaining)
     def [](name)
       named[name.to_s]
     end
@@ -23,14 +22,13 @@ module Fiasco
     end
   end
 
-  Mapping = Struct.new('Mapping', *%w[matcher bound handler params])
-  class Mapping
+  class Mapping < Struct.new(:matcher, :bound, :handler, :params)
     def invoke(target, captures)
-      handler_params = calculate_params(target, captures)
+      handler_params = _calculate_params(target, captures)
       target.send(handler, *handler_params)
     end
 
-    def calculate_params(target, captures)
+    def _calculate_params(target, captures)
       # TODO: handle rest arguments
       @handler_arguments ||= target.method(handler).parameters
       @handler_arguments.map{|kind, name| captures[name]}
