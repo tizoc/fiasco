@@ -6,7 +6,8 @@ module Fiasco
       %r{^(?<static>[^<]*)<(?:(?<type>#{ISNAME}*):)?(?<name>#{ISNAME}*)>}
     CONVERTERS = {
       'int' => lambda {|v| v.to_i},
-      'string' => lambda{|v| URI.unescape(v)}
+      'string' => lambda{|v| URI.unescape(v)},
+      'any' => lambda{|v| URI.unescape(v)}
     }
 
     def initialize(pattern, captures)
@@ -30,8 +31,9 @@ module Fiasco
 
       re = '^' + segments.map do |name, type|
         case type
-        when 'string' then "(?<#{name}>.+?)"
+        when 'string' then "(?<#{name}>[^/]+?)"
         when 'int' then "(?<#{name}>\\d+)"
+        when 'any' then "(?<#{name}>.+?)"
         else name # for nil
         end
       end.to_a.join
