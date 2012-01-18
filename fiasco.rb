@@ -42,6 +42,7 @@ module Fiasco
     attr_reader :env, :request, :response, :mappings, :default_path_matcher
 
     def initialize(options = {})
+      @captures = []
       @handlers = []
       @mappings = []
       @default_path_matcher = options.fetch(:default_path_matcher)
@@ -73,9 +74,13 @@ module Fiasco
             target.equal?(mapping.bound) || target.is_a?(mapping.bound)
 
           if captures = mapping.matcher.matches?(@env)
-            @last_captures = captures
-            mapping.invoke(target, captures)
-            throw(:complete, @response.finish)
+            begin
+              @captures.push(captures)
+              mapping.invoke(target, captures)
+              throw(:complete, @response.finish)
+            ensure
+              @captures.pop
+            end
           end
         end
       end
@@ -83,10 +88,11 @@ module Fiasco
 
     def pass(options = {})
       old_path, old_script = @env['PATH_INFO'], @env['SCRIPT_NAME']
+      captures = @captures.last
 
-      if @last_captures && @last_captures.remaining
-        @env['PATH_INFO'] = '/' + @last_captures.remaining
-        @env['SCRIPT_NAME'] = @last_captures.matched.gsub(%r{/$}, '')
+      if captures && captures.remaining
+        @env['PATH_INFO'] = '/' + captures.remaining
+        @env['SCRIPT_NAME'] = captures.matched.gsub(%r{/$}, '')
       end
 
       _pass(options)
