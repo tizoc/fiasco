@@ -71,8 +71,7 @@ EOS
       seen_variables
     end
 
-    def declare(name, options = {})
-      name = name.to_sym
+    def _declare(options)
       contents = options[:path] ? File.read(options[:path]) : options[:contents]
 
       if contents.nil?
@@ -82,7 +81,12 @@ EOS
       e = ERB.new(contents, nil, '%-', '@render_output')
       e.filename = options[:path]
 
-      @templates[name] = e
+      yield(e)
+    end
+
+    def declare(name, options = {})
+      name = name.to_sym
+      _declare(options) {|e| @templates[name] = e}
     end
 
     def _render(name, locals = {})
@@ -111,5 +115,14 @@ EOS
     end
 
     alias_method :[], :render
+
+    def macro(name, &b)
+      define_singleton_method name, b
+    end
+
+    def load_macros(options)
+      b = binding
+      _declare(options) {|e| e.run(b)}
+    end
   end
 end
