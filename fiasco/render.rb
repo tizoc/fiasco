@@ -118,9 +118,9 @@ EOS
       arguments = b.parameters
       define_singleton_method "__macro__#{mname}", b
       define_singleton_method mname do |*args|
-        opts = args.last.is_a?(Hash) ? defaults.merge(args.pop) : defaults
+        named = args.last.is_a?(Hash) ? defaults.merge(args.pop) : defaults
         macroargs =
-          *(args + arguments.drop(args.length).map{|_, name| opts[name]})
+          *(args + arguments.drop(args.length).map{|_, name| named[name]})
 
         send("__macro__#{mname}", *macroargs)
       end
