@@ -114,8 +114,12 @@ EOS
 
     alias_method :[], :render
 
-    def macro(name, &b)
-      define_singleton_method name, b
+    def macro(name, defaults = {}, &b)
+      arguments = b.parameters
+      define_singleton_method "__macro__#{name}", b
+      define_singleton_method name do |*args|
+        send("__macro__#{name}", *arguments.map{|kind, name| defaults[name]})
+      end
     end
 
     def load_macros(options)
