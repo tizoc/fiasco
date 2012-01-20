@@ -48,15 +48,13 @@ module Fiasco
       src << erb.src
       src << "\n@render_output"
 
-      self.class.module_eval do
-        meth = <<-EOS
+      meth = <<-EOS
 #coding:UTF-8
-define_method(:'__view__#{name}') do |params|
+define_singleton_method(:'__view__#{name}') do |params|
 #{src}
 end
 EOS
-        eval(meth, binding, erb.filename || '(ERB)', -2)
-      end
+      eval(meth, binding, erb.filename || '(ERB)', -2)
     end
 
     def _process_locals(name, locals)
