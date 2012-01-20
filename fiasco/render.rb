@@ -114,11 +114,15 @@ EOS
 
     alias_method :[], :render
 
-    def macro(name, defaults = {}, &b)
+    def macro(mname, defaults = {}, &b)
       arguments = b.parameters
-      define_singleton_method "__macro__#{name}", b
-      define_singleton_method name do |*args|
-        send("__macro__#{name}", *arguments.map{|kind, name| defaults[name]})
+      define_singleton_method "__macro__#{mname}", b
+      define_singleton_method mname do |*args|
+        opts = args.last.is_a?(Hash) ? defaults.merge(args.pop) : defaults
+        macroargs =
+          *(args + arguments.drop(args.length).map{|_, name| opts[name]})
+
+        send("__macro__#{mname}", *macroargs)
       end
     end
 
