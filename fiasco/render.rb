@@ -54,7 +54,7 @@ define_singleton_method(:'__view__#{name}') do |params|
 #{src}
 end
 EOS
-      eval(meth, binding, erb.filename || '(ERB)', -2)
+      eval(meth, binding, erb.filename || '(ERB)', -3)
     end
 
     def _process_locals(name, locals)
@@ -119,7 +119,11 @@ EOS
       define_singleton_method "__macro__#{mname}", b
       define_singleton_method mname do |named = nil|
         named = named ? defaults.merge(named) : defaults
-        send("__macro__#{mname}", *arguments.map{|_, name| named[name]})
+        args = arguments.map do |_, name|
+          named[name] or
+            raise ArgumentError, "Macro invocation '#{mname}' is missing a required argument: '#{name}'", caller(4)
+        end
+        send("__macro__#{mname}", *args)
       end
     end
 
