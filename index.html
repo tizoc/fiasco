@@ -1,0 +1,440 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+<title>Fiasco</title>
+    
+    <link rel="stylesheet" href="_static/fiasco.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Fiasco 1 documentation" href="#" /> 
+  </head>
+  <body>
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <ul class="nav">
+        <li><a href="#summary">Summary</a></li>
+        <li><a href="#basic-example">Basic Example</a></li>
+        <li><a href="#tutorial">Tutorial</a></li>
+        <li><a href="#api">API</a></li>
+        <li><a href="#idioms">Idioms</a></li>
+        <li><a href="https://github.com/tizoc/fiasco">GitHub Page</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+  <div class=container>
+  
+  <div class="section" id="fiasco">
+<h1>Fiasco<a class="headerlink" href="#fiasco" title="Permalink to this headline">¶</a></h1>
+<dl class="docutils">
+<dt>fi·as·co</dt>
+<dd><p class="first">noun, plural -cos, -coes.</p>
+<ol class="last arabic simple">
+<li>a complete and ignominious failure.</li>
+<li>a round-bottomed glass flask for wine, especially Chianti, fitted with a woven, protective raffia basket that also enables the bottle to stand upright.</li>
+</ol>
+</dd>
+</dl>
+<div class="section" id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>Fiasco is a thin and modular layer on top of Rack inspired by <a class="reference external" href="http://flask.pocoo.org">Flask</a>, <a class="reference external" href="http://jinja.pocoo.org">Jinja2</a> and <a class="reference external" href="http://cuba.is/">Cuba</a>.</p>
+<p>It provides routing mechanisms similar to what <a class="reference external" href="http://flask.pocoo.org">Flask</a> provides, and template rendering with support for template inheritance and explicit contexts similar to <a class="reference external" href="http://jinja.pocoo.org">Jinja2</a>.</p>
+<p>One of the goals is to keep the implementation lean and clean.</p>
+<p>Fiasco takes a different approach when compared to other libraries:</p>
+<p>First, it doesn&#8217;t enclose access to the request and env objects in a context that is only accessible to the &#8220;controller&#8221; (there is no such thing as a controller in Fiasco, only methods bound to routes). Any object or module method can be a route handler, there is no need to inherit from a special class, all is needed is that they get mapped to a route by the route mapper.</p>
+<p>Second, rendering of templates (also known as &#8216;views&#8217;) has its own context, any variables that have to be accessed by the template have to be passed explicitly. Helpers that have to be included in the template rendering context too. Basically, unlike in for example Sinatra, the context of your route handlers and your template rendering is completely disjoint.</p>
+<p>If you have worked with Python web frameworks, then you are already familiar with this way of working.</p>
+</div>
+<div class="section" id="basic-example">
+<h2>Basic Example<a class="headerlink" href="#basic-example" title="Permalink to this headline">¶</a></h2>
+<p>Check <tt class="file docutils literal"><span class="pre">examples/basic.ru</span></tt></p>
+<p>To run:</p>
+<div class="highlight-python"><pre>rackup examples/basic.ru</pre>
+</div>
+<p>And visit <a class="reference external" href="http://localhost:9292">http://localhost:9292</a> with your browser.</p>
+</div>
+<div class="section" id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<p>In the examples I use global variables (<tt class="docutils literal"><span class="pre">$app</span></tt>, <tt class="docutils literal"><span class="pre">$render</span></tt>, etc), this goes against the &#8220;globals are bad&#8221; dogma and hurts some sensibilities. It just happens to be the way I do it myself on my code (yes, I&#8217;m aware of the consecuences posed by using globals).</p>
+<p>If this doesn&#8217;t work for you (because you happen to use a threaded server, or you simply are allergic to globals) you can always use other approaches like degining a constant inside the namespace where your application lives for storing those references, or using Thread.current and a helper method so that you have to type less. It is up to you, Fiasco doesn&#8217;t prescribe a way of doing things here.</p>
+<p>The same applies to <tt class="docutils literal"><span class="pre">&#64;route</span></tt>. It can be named any way you want, and it doesn&#8217;t have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain &#8216;route&#8217;.</p>
+</div>
+<div class="section" id="tutorial">
+<h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+</div>
+<div class="section" id="module-Fiasco">
+<span id="api"></span><h2>API<a class="headerlink" href="#module-Fiasco" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Fiasco::Application">
+<em class="property">class </em><tt class="descname">Application</tt><a class="headerlink" href="#Fiasco::Application" title="Permalink to this definition">¶</a></dt>
+<dd><p>Application object which will be called by Rack.</p>
+<dl class="method">
+<dt id="Fiasco::Application#initialize">
+<tt class="descname">initialize</tt><big>(</big><span class="optional">[</span><em>options = {}</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#Fiasco::Application#initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the application object. A path matcher has to be passed in the <tt class="docutils literal"><span class="pre">default_path_matcher:</span></tt> option.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Application#add_handler">
+<tt class="descname">add_handler</tt><big>(</big><em>handler</em><big>)</big><a class="headerlink" href="#Fiasco::Application#add_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers a handler with this application.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Application#call">
+<tt class="descname">call</tt><big>(</big><em>env</em><big>)</big><a class="headerlink" href="#Fiasco::Application#call" title="Permalink to this definition">¶</a></dt>
+<dd><p>Entry point for the application, Rack calls this.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Application#pass">
+<tt class="descname">pass</tt><big>(</big><span class="optional">[</span><em>options = {to: nil</em>, <em>skip: nil}</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#Fiasco::Application#pass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Passes control to another handler. If <tt class="docutils literal"><span class="pre">to:</span></tt> references a handler object, control is passed to it. If <tt class="docutils literal"><span class="pre">skip:</span></tt> references a handler, control is passed to any handler that isn&#8217;t the one referenced by <tt class="docutils literal"><span class="pre">skip:</span></tt> (usually used with <tt class="docutils literal"><span class="pre">self</span></tt>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Application#not_found">
+<tt class="descname">not_found</tt><big>(</big><big>)</big><a class="headerlink" href="#Fiasco::Application#not_found" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the response status to 404 and finishes the request.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Fiasco::Captures">
+<em class="property">class </em><tt class="descname">Captures</tt><a class="headerlink" href="#Fiasco::Captures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request match captures</p>
+<dl class="method">
+<dt id="Fiasco::Captures#matched">
+<tt class="descname">matched</tt><big>(</big><big>)</big><a class="headerlink" href="#Fiasco::Captures#matched" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the matched part of the request path.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Captures#named">
+<tt class="descname">named</tt><big>(</big><big>)</big><a class="headerlink" href="#Fiasco::Captures#named" title="Permalink to this definition">¶</a></dt>
+<dd><p>A mapping of names to captured fragments of PATH_INFO.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Captures#remaining">
+<tt class="descname">remaining</tt><big>(</big><big>)</big><a class="headerlink" href="#Fiasco::Captures#remaining" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rest of PATH_INFO that wasn&#8217;t captured by a capturing path matcher.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descname">[](name)</tt></dt>
+<dd><p>Returns a value from the names to captured fragments mapping. Converts name to a string before using.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Fiasco::Matcher">
+<em class="property">class </em><tt class="descname">Matcher</tt><a class="headerlink" href="#Fiasco::Matcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request matcher</p>
+<dl class="method">
+<dt id="Fiasco::Matcher#matches?">
+<tt class="descname">matches?</tt><big>(</big><em>env</em><big>)</big><a class="headerlink" href="#Fiasco::Matcher#matches?" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the current environment matches the rules on this Marcher. If the request matches, a <tt class="docutils literal"><span class="pre">Captures</span></tt> object is returned.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Fiasco::Mapping">
+<em class="property">class </em><tt class="descname">Mapping</tt><a class="headerlink" href="#Fiasco::Mapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mapping from matchers to handlers</p>
+<dl class="method">
+<dt id="Fiasco::Mapping#invoke">
+<tt class="descname">invoke</tt><big>(</big><em>target</em>, <em>captures</em><big>)</big><a class="headerlink" href="#Fiasco::Mapping#invoke" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invokes a handler.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Fiasco::Mapper">
+<em class="property">class </em><tt class="descname">Mapper</tt><a class="headerlink" href="#Fiasco::Mapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object that handles mapping definitions of matchers to handlers.</p>
+<dl class="classmethod">
+<dt id="Fiasco::Mapper.bind">
+<em class="property">classmethod Mapper.</em><tt class="descname">bind</tt><big>(</big><em>mod</em>, <em>app</em><span class="optional">[</span>, <em>patch_matcher = app.default_path_matcher</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#Fiasco::Mapper.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Mapper instance bound to the specified module or class and application instance.</p>
+<p>Optionally, a path_matcher can be specified, or the default defined by the application will be used</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Mapper#initialize">
+<tt class="descname">initialize</tt><big>(</big><em>app</em>, <em>path_matcher_kass</em><big>)</big><a class="headerlink" href="#Fiasco::Mapper#initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the mapper bound to app and using path_mathcher_klass for path matching.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Mapper#push">
+<tt class="descname">push</tt><big>(</big><em>url_pattern</em><span class="optional">[</span>, <em>options = {}</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#Fiasco::Mapper#push" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pushers a new matcher rule to the stack.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Mapper#capture">
+<tt class="descname">capture</tt><big>(</big><em>url_pattern</em><span class="optional">[</span>, <em>options = {}</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#Fiasco::Mapper#capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like <tt class="docutils literal"><span class="pre">push</span></tt> but the matcher rule is defined as capturing.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Fiasco::Mapper#map">
+<tt class="descname">map</tt><big>(</big><em>target</em>, <em>method</em><big>)</big><a class="headerlink" href="#Fiasco::Mapper#map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maps a method on target for all the matchers accumulated so far. Clears the matchers stack.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="idioms">
+<h2>Idioms<a class="headerlink" href="#idioms" title="Permalink to this headline">¶</a></h2>
+<p>Fiasco doesn&#8217;t provide everything out of the box, and the way some parts are implemented may not be the right one for every project or developer taste. Here is a list of code snippets for modifications you can implement, and idioms for functionality not provided.</p>
+<div class="section" id="application-settings">
+<h3>Application settings<a class="headerlink" href="#application-settings" title="Permalink to this headline">¶</a></h3>
+<p>The usual way of solving this problem is to parse a YAML file, and to have different environment names for development, staging and production. A different approach will be shown here.</p>
+<p>Overview:</p>
+<ul class="simple">
+<li>The settings file is just code</li>
+<li>There are two files, one defining the defaults and another defining the overrides</li>
+<li>Setting values can be passed as environment variables</li>
+<li>The path to the overrides file can be passed as an environment variable</li>
+</ul>
+<p>Here is how the initialization looks:</p>
+<div class="highlight-ruby"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre> <span class="k">begin</span>
+   <span class="c1"># Load overrides to the defaults</span>
+   <span class="nb">require</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;MYAPP_CONFIG&#39;</span><span class="o">]</span> <span class="o">||</span> <span class="s1">&#39;./conf.rb&#39;</span>
+ <span class="k">rescue</span> <span class="no">LoadError</span>
+   <span class="c1"># display warnings if desired</span>
+ <span class="k">end</span>
+
+ <span class="c1"># Load the defaults</span>
+ <span class="nb">require</span> <span class="s1">&#39;./defaults.rb&#39;</span> <span class="c1"># will set any options not set by conf.rb</span>
+
+ <span class="c1"># ... &lt;snip&gt; ...</span>
+
+ <span class="c1"># Use config</span>
+ <span class="no">DB</span> <span class="o">=</span> <span class="no">Sequel</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="no">Conf</span><span class="o">::</span><span class="no">DATABASE_URL</span><span class="p">)</span>
+ <span class="no">Sequel</span><span class="o">.</span><span class="n">database_timezone</span> <span class="o">=</span> <span class="no">Conf</span><span class="o">::</span><span class="no">DATABASE_TIMEZONE</span>
+ <span class="no">Sequel</span><span class="o">.</span><span class="n">application_timezone</span> <span class="o">=</span> <span class="no">Conf</span><span class="o">::</span><span class="no">APPLICATION_TIMEZONE</span>
+
+ <span class="c1"># ... &lt;snip&gt; ...</span>
+</pre></div>
+</td></tr></table></div>
+<p>It first loads the <tt class="docutils literal"><span class="pre">conf.rb</span></tt> file, which contains the overrides for the current environment (in local it will contain settings for development mode, on staging the settings specific for staging, etc). The location is override-able using an environment variable, this way a different configuration file can be specified when running tests, or paths to configuration files on staging and production servers (heroku has native support for setting environment variables before launching your application).</p>
+<p>A <tt class="file docutils literal"><span class="pre">conf.rb</span></tt> file where the defaults are overriden for development mode would look like this:</p>
+<div class="highlight-ruby"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span class="c1"># conf.rb</span>
+<span class="k">module</span> <span class="nn">Conf</span>
+  <span class="no">HOST</span>         <span class="o">=</span> <span class="s1">&#39;localhost:9393&#39;</span>
+  <span class="no">DATABASE_URL</span> <span class="o">=</span> <span class="s2">&quot;postgres://postgres@localhost/myappdb&quot;</span>
+
+  <span class="no">S3_BUCKET</span>    <span class="o">=</span> <span class="s2">&quot;test.myapp&quot;</span>
+  <span class="no">S3_ACCESS</span>    <span class="o">=</span> <span class="s2">&quot;&lt;secret&gt;&quot;</span>
+  <span class="no">S3_SECRET</span>    <span class="o">=</span> <span class="s2">&quot;&lt;secret&gt;&quot;</span>
+<span class="k">end</span>
+</pre></div>
+</td></tr></table></div>
+<p>And finally, <tt class="file docutils literal"><span class="pre">defaults.rb</span></tt>. This is the file that defines all the defaults. It is loaded after the file that overrides the defaults has been loaded and only defines values for settings that don&#8217;t have one already.</p>
+<div class="highlight-ruby"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span class="c1"># defaults.rb</span>
+<span class="k">module</span> <span class="nn">Conf</span>
+  <span class="no">HOST</span> <span class="o">||=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;HOSTNAME&#39;</span><span class="o">]</span>
+
+  <span class="c1"># Database</span>
+  <span class="no">APPLICATION_TIMEZONE</span>  <span class="o">||=</span> <span class="ss">:pst</span>
+  <span class="no">DATABASE_TIMEZONE</span>     <span class="o">||=</span> <span class="ss">:utc</span>
+  <span class="no">DATABASE_URL</span>          <span class="o">||=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;DATABASE_URL&#39;</span><span class="o">]</span>
+
+  <span class="c1"># S3</span>
+  <span class="no">S3_BUCKET</span>             <span class="o">||=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;S3_BUCKET&#39;</span><span class="o">]</span>
+  <span class="no">S3_ACCESS</span>             <span class="o">||=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;S3_ACCESS&#39;</span><span class="o">]</span>
+  <span class="no">S3_SECRET</span>             <span class="o">||=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;S3_SECRET&#39;</span><span class="o">]</span>
+
+  <span class="c1"># Other</span>
+  <span class="no">SEARCH_ENGINES</span>        <span class="o">||=</span> <span class="sx">%w[duckduckgo bing google]</span>
+
+  <span class="k">module</span> <span class="nn">Mail</span>
+    <span class="c1"># Other options can be referenced</span>
+    <span class="no">FROM</span>     <span class="o">||=</span> <span class="s2">&quot;TuneUp &lt;no-reply@</span><span class="si">#{</span><span class="no">HOST</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+    <span class="no">SERVER</span>   <span class="o">||=</span> <span class="s1">&#39;smtp.sendgrid.net&#39;</span>
+    <span class="no">PORT</span>     <span class="o">||=</span> <span class="s1">&#39;587&#39;</span>
+    <span class="c1"># Be careful with options that can have a false value</span>
+    <span class="no">USE_TLS</span>  <span class="o">=</span> <span class="kp">true</span> <span class="k">unless</span> <span class="n">defined?</span> <span class="no">USE_TLS</span>
+    <span class="no">USER</span>     <span class="o">||=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;SENDGRID_USERNAME&#39;</span><span class="o">]</span>
+    <span class="no">PASSWORD</span> <span class="o">||=</span> <span class="no">ENV</span><span class="o">[</span><span class="s1">&#39;SENDGRID_PASSWORD&#39;</span><span class="o">]</span>
+    <span class="no">DOMAIN</span>   <span class="o">||=</span> <span class="s1">&#39;heroku.com&#39;</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="loading-templates-from-a-directory">
+<h3>Loading templates from a directory<a class="headerlink" href="#loading-templates-from-a-directory" title="Permalink to this headline">¶</a></h3>
+<p>Assuming that a project is structured so that all the template files live under a <tt class="file docutils literal"><span class="pre">templates/</span></tt> directory, here is a way to declare them in a <tt class="docutils literal"><span class="pre">Fiasco::Render</span></tt> instance without having to mention each of the templates in the code:</p>
+<div class="highlight-ruby"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre> <span class="vg">$render</span> <span class="o">=</span> <span class="no">Fiasco</span><span class="o">::</span><span class="no">Render</span><span class="o">.</span><span class="n">new</span>
+
+ <span class="no">Dir</span><span class="o">[</span><span class="s1">&#39;./templates/**/*.erb&#39;</span><span class="o">].</span><span class="n">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">path</span><span class="o">|</span>
+   <span class="c1"># &#39;templates/home.erb&#39; will be named &#39;home&#39; ($render[&#39;home&#39;])</span>
+   <span class="c1"># &#39;templates/albums/edit.erb&#39; will be named &#39;albums/edit&#39; ($render[&#39;albums/edit&#39;])</span>
+   <span class="c1"># etc</span>
+   <span class="nb">name</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="sr">/\.erb$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="s1">&#39;./views/&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+   <span class="vg">$render</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">path</span><span class="p">)</span>
+ <span class="k">end</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="positional-arguments-support-in-macros">
+<h3>Positional arguments support in macros<a class="headerlink" href="#positional-arguments-support-in-macros" title="Permalink to this headline">¶</a></h3>
+<p>Let&#8217;s say you have this macro defined</p>
+<div class="highlight-rhtml"><div class="highlight"><pre><span class="cp">&lt;%#</span><span class="c"> Macro that takes 4 named parameters with some defaults defined </span><span class="cp">%&gt;</span>
+<span class="cp">&lt;%</span> <span class="n">macro</span> <span class="ss">:input</span><span class="p">,</span> <span class="n">type</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="mi">20</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">size</span><span class="o">|</span> <span class="cp">%&gt;</span>
+  <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="n">type</span> <span class="cp">%&gt;</span><span class="s">&quot;</span> <span class="na">name=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="nb">name</span> <span class="cp">%&gt;</span><span class="s">&quot;</span> <span class="na">value=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="n">value</span> <span class="cp">%&gt;</span><span class="s">&quot;</span> <span class="na">size=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="n">size</span> <span class="cp">%&gt;</span><span class="s">&quot;</span><span class="nt">&gt;</span>
+<span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+</pre></div>
+</div>
+<p>Normally it would be invoked it like this:</p>
+<div class="highlight-rhtml"><div class="highlight"><pre><span class="cp">&lt;%</span> <span class="n">input</span><span class="p">(</span><span class="nb">name</span><span class="p">:</span> <span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="cp">%&gt;</span>
+</pre></div>
+</div>
+<p>But lets say you want to support positional arguments (something <tt class="docutils literal"><span class="pre">Fiasco::Render</span></tt> macros don&#8217;t implement by default) to invoke it like this:</p>
+<div class="highlight-rhtml"><div class="highlight"><pre><span class="cp">&lt;%</span> <span class="n">input</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="cp">%&gt;</span>
+</pre></div>
+</div>
+<p>Here is how it is done:</p>
+<div class="highlight-ruby"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre></div></td><td class="code"><div class="highlight"><pre> <span class="c1"># in Fiasco::Render (or a subclass)</span>
+ <span class="k">def</span> <span class="nf">macro</span><span class="p">(</span><span class="n">mname</span><span class="p">,</span> <span class="n">defaults</span> <span class="o">=</span> <span class="p">{},</span> <span class="o">&amp;</span><span class="n">b</span><span class="p">)</span>
+   <span class="n">arguments</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">parameters</span>
+   <span class="n">define_singleton_method</span> <span class="s2">&quot;__macro__</span><span class="si">#{</span><span class="n">mname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">b</span>
+   <span class="n">define_singleton_method</span> <span class="n">mname</span> <span class="k">do</span> <span class="o">|*</span><span class="n">args</span><span class="o">|</span>
+     <span class="n">named</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">last</span><span class="o">.</span><span class="n">is_a?</span><span class="p">(</span><span class="no">Hash</span><span class="p">)</span> <span class="p">?</span> <span class="n">defaults</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="p">:</span> <span class="n">defaults</span>
+     <span class="n">macroargs</span> <span class="o">=</span>
+       <span class="o">*</span><span class="p">(</span><span class="n">args</span> <span class="o">+</span> <span class="n">arguments</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">length</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">{</span><span class="o">|</span><span class="n">_</span><span class="p">,</span> <span class="nb">name</span><span class="o">|</span> <span class="n">named</span><span class="o">[</span><span class="nb">name</span><span class="o">]</span><span class="p">})</span>
+
+     <span class="nb">send</span><span class="p">(</span><span class="s2">&quot;__macro__</span><span class="si">#{</span><span class="n">mname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">macroargs</span><span class="p">)</span>
+   <span class="k">end</span>
+ <span class="k">end</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+<div class="section" id="todo">
+<h2>TODO<a class="headerlink" href="#todo" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Add more examples</li>
+<li>Generation of urls</li>
+<li>Arguments support in the extended path matcher types</li>
+<li>Autoescaping in templates</li>
+</ul>
+</div>
+</div>
+
+
+  </div>
+  <footer class=footer>
+    <div class=container>
+      <p>
+        Copyright 2012, Bruno Deferrari.
+        Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      </p>
+    </div>
+  </footer>
+
+  </body>
+</html>
