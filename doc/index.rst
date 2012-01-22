@@ -8,9 +8,9 @@
 Notes
 =====
 
-In the examples I use global variables (``$app``, ``$render``, etc), this goes against the "globals are bad" dogma and hurts some sensibilities. It just happens to be the way I do it myself on my code (yes, I'm aware of the consecuences posed by using globals).
+In the examples I use global variables (``$app``, ``$render``, etc), this goes against the "globals are bad" dogma and hurts some sensibilities. It just happens to be the way I do it myself on my code (yes, I'm aware of the consequences posed by using globals).
 
-If this doesn't work for you (because you happen to use a threaded server, or you simply are allergic to globals) you can always use other approaches like degining a constant inside the namespace where your application lives for storing those references, or using Thread.current and a helper method so that you have to type less. It is up to you, Fiasco doesn't prescribe a way of doing things here.
+If this doesn't work for you (because you happen to use a threaded server, or you simply are allergic to globals) you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references, or using Thread.current and a helper method so that you have to type less. It is up to you, Fiasco doesn't prescribe a way of doing things here.
 
 The same applies to ``@route``. It can be named any way you want, and it doesn't have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain 'route'.
 
@@ -96,7 +96,7 @@ API
 
     .. rb:method:: initialize(app, path_matcher_kass)
 
-        Initializes the mapper bound to app and using path_mathcher_klass for path matching.
+        Initializes the mapper bound to app and using path_matcher_klass for path matching.
  
     .. rb:method:: push(url_pattern[, options = {}])
  
@@ -151,9 +151,9 @@ Here is how the initialization looks:
 
     # ... <snip> ...
 
-It first loads the ``conf.rb`` file, which contains the overrides for the current environment (in local it will contain settings for development mode, on staging the settings specific for staging, etc). The location is override-able using an environment variable, this way a different configuration file can be specified when running tests, or paths to configuration files on staging and production servers (heroku has native support for setting environment variables before launching your application).
+It first loads the ``conf.rb`` file, which contains the overrides for the current environment (in local it will contain settings for development mode, on staging the settings specific for staging, etc). The location is override-able using an environment variable, this way a different configuration file can be specified when running tests, or paths to configuration files on staging and production servers (Heroku has native support for setting environment variables before launching your application).
 
-A :file:`conf.rb` file where the defaults are overriden for development mode would look like this:
+A :file:`conf.rb` file where the defaults are overridden for development mode would look like this:
 
 .. code-block:: ruby
    :linenos:
@@ -192,7 +192,7 @@ And finally, :file:`defaults.rb`. This is the file that defines all the defaults
 
      module Mail
        # Other options can be referenced
-       FROM     ||= "TuneUp <no-reply@#{HOST}>"
+       FROM     ||= "MyApp <no-reply@#{HOST}>"
        SERVER   ||= 'smtp.sendgrid.net'
        PORT     ||= '587'
        # Be careful with options that can have a false value
