@@ -108,7 +108,7 @@ module_function
   # This can be used for global before/after hooks (by
   # matching on "/", or to call subhandlers.
   # Try visiting "/capturing/Hello/sum/10/33"
-  @route.capture("/capturing/<any:title>/")
+  @route.capture("/capturing/<string:title>/")
   def capturing(title)
     out "<h1>#{title}</h1>"
     $app.pass

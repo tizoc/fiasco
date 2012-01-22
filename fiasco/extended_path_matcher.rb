@@ -7,7 +7,7 @@ module Fiasco
     CONVERTERS = {
       'int' => lambda {|v| v.to_i},
       'string' => lambda{|v| URI.unescape(v)},
-      'any' => lambda{|v| URI.unescape(v)}
+      'path' => lambda{|v| URI.unescape(v)}
     }
 
     def initialize(pattern, captures)
@@ -33,7 +33,7 @@ module Fiasco
         case type
         when 'string' then "(?<#{name}>[^/]+?)"
         when 'int' then "(?<#{name}>\\d+)"
-        when 'any' then "(?<#{name}>.+?)"
+        when 'path' then "(?<#{name}>.+?)"
         else name # for nil
         end
       end.to_a.join

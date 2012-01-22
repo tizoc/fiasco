@@ -19,7 +19,7 @@ The implementation is intended to be lean and clean like in `Cuba`_.
 Basic Example
 =============
 
-Check ``examples/basic.ru``
+Check :file:`examples/basic.ru`
 
 To run::
 
