@@ -1,0 +1,103 @@
+@import url('bootstrap.min.css');
+
+footer.footer {
+    text-align: center;
+    padding-top: 6px;
+    /*color: #f5f5f5;*/
+}
+
+div.navbar-inner, footer.footer {
+    /*background: #bdecee;*/
+    /*background: #60cfb0;*/
+    /*background: #fff0b7;*/
+    /*background: #B2E3D6;*/
+    /*background: #c34f2b;*/
+    background: #f5f5f5;
+    box-shadow: none;
+}
+
+.navbar .nav > li > a, .navbar .brand, footer.footer a {
+    color: #c34f2b;
+    /*color: #f5f5f5;*/
+    text-shadow: none;
+}
+
+.navbar .nav > li > a, .navbar .brand {
+    font-weight: bold;
+}
+
+.navbar .nav > li > a:hover, .navbar .brand:hover, footer.footer a:hover {
+    color: #000;
+}
+
+a:hover {
+    color: #e34f2b;
+}
+
+a.headerlink {
+    visibility: hidden;
+}
+
+h1:hover > a.headerlink,
+h2:hover > a.headerlink,
+h3:hover > a.headerlink,
+h4:hover > a.headerlink,
+h5:hover > a.headerlink,
+h6:hover > a.headerlink,
+dt:hover > a.headerlink {
+    visibility: visible;
+}
+
+body, .highlight pre {
+    /*background-color: #c34f2b;*/
+    /*background: #e49c97;*/
+    /*background: #f5f5f5;*/
+    background: #fff;
+}
+
+div.section {
+    /*background-color: #f1f0e7;*/
+}
+
+h1, h2, h3, h4, h4, h6, a, .descname {
+    color: #c34f2b;
+}
+
+#fiasco {
+    padding: 24px;
+}
+
+dl.docutils {
+    padding: 12px;
+    margin-bottom: 0;
+}
+
+dl.docutils dd p.first {
+    font-style: italic;
+}
+
+pre {
+    border: none;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.pre {
+    color: #000;
+}
+
+td.linenos pre {
+    background-color: #f5f5f5;
+}
+
+.highlighttable td, .highlighttable th {
+    padding: 0;
+}
+
+dl.class {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+dl.classmethod em.property {
+    color: #888;
+}
