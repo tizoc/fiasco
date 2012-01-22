@@ -27,7 +27,7 @@ If you have worked with Python web frameworks, then you are already familiar wit
 Basic Example
 =============
 
-Check :file:`examples/basic.ru`
+Check `examples/basic.ru <https://github.com/tizoc/fiasco/blob/master/examples/basic.ru>`_
 
 To run::
 
