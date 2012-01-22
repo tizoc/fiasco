@@ -14,7 +14,15 @@ Fiasco is a thin and modular layer on top of Rack inspired by `Flask`_, `Jinja2`
 
 It provides routing mechanisms similar to what `Flask`_ provides, and template rendering with support for template inheritance and explicit contexts similar to `Jinja2`_.
 
-The implementation is intended to be lean and clean like in `Cuba`_.
+One of the goals is to keep the implementation lean and clean.
+
+Fiasco takes a different approach when compared to other libraries:
+
+First, it doesn't enclose access to the request and env objects in a context that is only accessible to the "controller" (there is no such thing as a controller in Fiasco, only methods bound to routes). Any object or module method can be a route handler, there is no need to inherit from a special class, all is needed is that they get mapped to a route by the route mapper.
+
+Second, rendering of templates (also known as 'views') has its own context, any variables that have to be accessed by the template have to be passed explicitly. Helpers that have to be included in the template rendering context too. Basically, unlike in for example Sinatra, the context of your route handlers and your template rendering is completely disjoint.
+
+If you have worked with Python web frameworks, then you are already familiar with this way of working.
 
 Basic Example
 =============
