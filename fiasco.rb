@@ -1,5 +1,8 @@
+require 'forwardable'
 require 'rack'
 require 'set'
+require_relative 'fiasco/global_state'
+require_relative 'fiasco/thread_local_proxy'
 
 module Fiasco
   class Captures < Struct.new(:matched, :named, :remaining)
@@ -36,19 +39,28 @@ module Fiasco
   end
 
   class Application
-    attr_reader :env, :request, :response, :mappings, :default_path_matcher
+    Context = Struct.new(:captures, :g, :env, :request, :response)
+    attr_reader :mappings, :default_path_matcher, :ctx
+
+    extend Forwardable
+    context_attributes = %w[env env= captures captures=
+                            request request= response response=]
+    def_delegators :ctx, *context_attributes
 
     def initialize(options = {})
-      @captures = []
+      @ctx = ThreadLocalProxy.new
       @handlers = []
       @mappings = []
       @default_path_matcher = options.fetch(:default_path_matcher)
     end
 
     def call(env)
-      @env = env
-      @request = Rack::Request.new(env)
-      @response = Rack::Response.new
+      ctx.__setobj__(Context.new) if !ctx
+      ctx.captures = []
+      ctx.env = env
+      ctx.request = Rack::Request.new(env)
+      ctx.response = Rack::Response.new
+      ctx.g = GlobalState.new
 
       catch(:complete) do
         pass
@@ -56,7 +68,7 @@ module Fiasco
         not_found
       end
     ensure
-      @env = @request = @response = nil
+      ctx.env = ctx.request = ctx.response = ctx.g = nil
     end
 
     def _pass(options = {})
@@ -70,13 +82,13 @@ module Fiasco
           next unless
             target.equal?(mapping.bound) || target.is_a?(mapping.bound)
 
-          if captures = mapping.matcher.matches?(@env)
+          if captured = mapping.matcher.matches?(env)
             begin
-              @captures.push(captures)
-              mapping.invoke(target, captures)
-              throw(:complete, @response.finish)
+              captures.push(captured)
+              mapping.invoke(target, captured)
+              throw(:complete, response.finish)
             ensure
-              @captures.pop
+              captures.pop
             end
           end
         end
@@ -84,23 +96,23 @@ module Fiasco
     end
 
     def pass(options = {})
-      old_path, old_script = @env['PATH_INFO'], @env['SCRIPT_NAME']
-      captures = @captures.last
+      old_path, old_script = env['PATH_INFO'], env['SCRIPT_NAME']
+      captured = captures.last
 
-      if captures && captures.remaining
-        @env['PATH_INFO'] = '/' + captures.remaining
-        @env['SCRIPT_NAME'] = captures.matched.gsub(%r{/$}, '')
+      if captured && captured.remaining
+        env['PATH_INFO'] = '/' + captured.remaining
+        env['SCRIPT_NAME'] = captured.matched.gsub(%r{/$}, '')
       end
 
       _pass(options)
       not_found
     ensure
-      @env['PATH_INFO'], @env['SCRIPT_NAME'] = old_path, old_script
+      env['PATH_INFO'], env['SCRIPT_NAME'] = old_path, old_script
     end
 
     def not_found
-      @response.status = 404
-      @response.finish
+      response.status = 404
+      response.finish
     end
 
     def add_handler(object)
@@ -139,8 +151,8 @@ module Fiasco
       defaults = options.fetch(:defaults, {})
       methods = options.fetch(:methods, %w[GET])
       partial = options.fetch(:partial, false)
-      set_defaults = lambda{|_, captures|
-        defaults.each{|k,v| captures.named[k.to_s] = v}
+      set_defaults = lambda{|_, captured|
+        defaults.each{|k,v| captured.named[k.to_s] = v}
       }
       check_method = lambda{|env, _|
         methods.include?(env["REQUEST_METHOD"])

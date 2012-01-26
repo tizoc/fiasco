@@ -13,7 +13,15 @@ require File.expand_path('../fiasco/render', BASEDIR)
 # (what receives the env from Rack)
 # A default path matcher has to be specified, here we used the extended
 # path matcher.
+# Making the app instance a global is optional.
 $app = Fiasco::Application.new(default_path_matcher: Fiasco::ExtendedPathMatcher)
+
+# All these shorcuts are optional too
+# These globals are thread-local proxies to the actual data
+$g = Fiasco::Proxy.new{$app.ctx.g} # Global store
+$request = Fiasco::Proxy.new{$app.ctx.request} # Rack Request object
+$response = Fiasco::Proxy.new{$app.ctx.response} # Rack Response object
+$env = Fiasco::Proxy.new{$app.ctx.env} # Rack env
 
 # The renderer is responsible for compiling and rendering templates
 $render = Fiasco::Render.new
@@ -66,7 +74,7 @@ module_function
 
   # A normal method (a helper)
   def out(value)
-    $app.response.write(value)
+    $response.write(value)
   end
 
   # Route for the root
@@ -87,7 +95,7 @@ module_function
   # Handler methods can call other handler methods
   @route["/hello-ip"]
   def hello_ip
-    hello($app.request.ip)
+    hello($request.ip)
   end
 
   # Fiasco::Mapper#[] is an alias to Fiasco::Mapper#push
