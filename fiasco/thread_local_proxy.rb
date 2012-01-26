@@ -2,7 +2,15 @@ require 'delegate'
 require 'securerandom'
 
 module Fiasco
-  class ThreadLocalProxy < Delegator
+  class CachingDelegator < Delegator
+    # Unlike delegator, we cache called methods
+    def method_missing(method, *args)
+      define_singleton_method(method){|*a| __getobj__.__send__(method, *a)}      
+      __send__(method, *args)
+    end
+  end
+
+  class ThreadLocalProxy < CachingDelegator
     def initialize(name = ::SecureRandom.uuid)
       @name = name
     end
@@ -16,7 +24,7 @@ module Fiasco
     end
   end
 
-  class Proxy < Delegator
+  class Proxy < CachingDelegator
     def initialize(&block)
       @block = block
     end
