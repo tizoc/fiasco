@@ -8,21 +8,60 @@
 Notes
 =====
 
-In the examples I use global variables (``$app``, ``$render``, etc), this goes against the "globals are bad" dogma and hurts some sensibilities. It just happens to be the way I do it myself on my code (yes, I'm aware of the consequences posed by using globals).
+In the examples I use global variables (``$app``, ``$request``, ``$env`` etc), this goes against the "globals are bad" dogma and hurts some sensibilities. This is just the way I choose to do things on my apps. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.
 
-If this doesn't work for you (because you happen to use a threaded server, or you simply are allergic to globals) you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references, or using Thread.current and a helper method so that you have to type less. It is up to you, Fiasco doesn't prescribe a way of doing things here.
+If this doesn't work for you you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
 
 The same applies to ``@route``. It can be named any way you want, and it doesn't have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain 'route'.
 
-Tutorial
+Getting Started
+===============
+
+**TODO**
+
+Overview
 ========
 
-TODO
+**TODO**
 
-API
-===
+Routing
+-------
+
+**TODO**
+
+URL Resolution
+""""""""""""""
+
+**TODO**
+
+The Request Context
+-------------------
+
+**TODO**
+
+Thread-Local Globals
+""""""""""""""""""""
+
+**TODO**
+
+Rendering
+---------
+
+**TODO**
+
+Macros
+""""""
+
+**TODO**
+
+
+API Reference
+=============
 
 .. rb:module:: Fiasco
+
+Core
+----
 
 .. rb:class:: Application
 
@@ -109,6 +148,21 @@ API
     .. rb:method:: map(target, method)
  
         Maps a method on target for all the matchers accumulated so far. Clears the matchers stack.
+
+Route Matching
+--------------
+
+.. rb:class:: ExtendedPathMatcher
+
+   **TODO**
+
+Rendering
+---------
+
+.. rb:class:: Render
+
+   **TODO**
+
 
 Idioms
 ======

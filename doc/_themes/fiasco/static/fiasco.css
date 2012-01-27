@@ -48,6 +48,10 @@ dt:hover > a.headerlink {
     visibility: visible;
 }
 
+h2 {
+    margin-left: -60px;
+}
+
 body, .highlight pre {
     /*background-color: #c34f2b;*/
     /*background: #e49c97;*/
