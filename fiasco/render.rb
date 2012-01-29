@@ -116,8 +116,7 @@ EOS
 
     def macro(mname, defaults = {}, &b)
       arguments = b.parameters
-      define_singleton_method mname do |named = nil, &block|
-        named ||= defaults
+      define_singleton_method mname do |named = defaults, &block|
         args = arguments.select{|t| t[0] != :block}.map do |type, name|
           named.fetch(name, defaults[name]) or
             raise ArgumentError, "Macro invocation '#{mname}' is missing a required argument: '#{name}'", caller(4)
