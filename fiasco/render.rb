@@ -116,14 +116,13 @@ EOS
 
     def macro(mname, defaults = {}, &b)
       arguments = b.parameters
-      define_singleton_method "__macro__#{mname}", b
       define_singleton_method mname do |named = nil, &block|
-        named = named ? defaults.merge(named) : defaults
+        named ||= defaults
         args = arguments.select{|t| t[0] != :block}.map do |type, name|
-          named[name] or
+          named.fetch(name, defaults[name]) or
             raise ArgumentError, "Macro invocation '#{mname}' is missing a required argument: '#{name}'", caller(4)
         end
-        send("__macro__#{mname}", *args, &block)
+        b.call(*args, &block)
       end
     end
 
