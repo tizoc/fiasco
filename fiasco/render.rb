@@ -43,9 +43,10 @@ module Fiasco
     end
 
     def _compile(name, erb, locals = [])
-      src = "params ||= {}; @render_output ||= ''\n"
+      src = "params ||= {}; @render_output ||= ''; "
       locals.each {|var| src += "#{var} = params[:#{var}]; "}
-      src << erb.src
+      src << "\n"
+      src << erb.src.gsub("#coding:UTF-8\n", '')
       src << "\n@render_output"
 
       meth = <<-EOS
@@ -54,7 +55,7 @@ define_singleton_method(:'__view__#{name}') do |params|
 #{src}
 end
 EOS
-      eval(meth, binding, erb.filename || '(ERB)', -3)
+      eval(meth, binding, erb.filename || '(ERB)', -2)
     end
 
     def _process_locals(name, locals)
