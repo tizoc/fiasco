@@ -49,11 +49,67 @@ Rendering
 
 **TODO**
 
-Macros
-""""""
+Template Inheritance
+""""""""""""""""""""
 
 **TODO**
 
+Macros
+""""""
+
+Macros are similar in concept to what utility "partials" are in Rails or Sinatra. The difference is that macros are called directly (they are a method like any other, except that they can't yield, but they can receive explicit blocks)
+
+An example macros file looks like this:
+
+:file:`macros/my_macros.erb`
+
+.. code-block:: rhtml
+   
+   <% macro :input, type: 'text', value: '', size: 20 do |name, type, value, size| %>
+     <input type="<%= type %>" name="<%= name %>" value="<%= value %>" size="<%= size %>">
+   <% end %>
+   <% macro :label, required: false do |text, required| %>
+     <label><%= text %><% if required %><span class=required>*</span><% end %></label>
+   <% end %>
+   <% macro :field, type: 'text', required: false, label: nil do |type, name, label, required| %>
+     <div class=field>
+     <% label(text: label || name.gsub(/[-_]/, ' ').capitalize, required: required)
+        input(name: name, type: type) %>
+     </div>
+   <% end %>
+
+Here three macros where defined, ``input``, ``label`` and ``field``.
+
+``macro`` arguments are a name for the macro, a list of default values for the macro arguments (optional), and a block that defines the body of the macro. ``input`` for example takes one required argument ``name:`` and three optional arguments ``type:``, ``value:`` and ``size:`` because they have defaults defined.
+
+To load this file with your renderer object:
+
+.. code-block:: ruby
+
+   renderer = Fiasco::Render.new
+   render.load_macros(path: 'macros/my_macros.erb')
+
+After loading a macros file, the macros defined on tha file will be available for templates to invoke like in the following example:
+
+:file:`views/users/signup_form.erb`
+
+.. code-block:: rhtml
+
+   <% extends :base %>
+
+   <% block(:main) do %>
+     <form method=post>
+       <fieldset>
+         <% field(name: 'username', value: user.name) %>
+         <% field(name: 'password', type: 'password') %>
+         <% field(name: 'password_confirm', type: 'password') %>
+       </fieldset>
+
+       <button>Submit</button>
+     </form>
+   <% end %>
+
+Arguments are all passed by name, for an alternative implementation check the idioms section.
 
 API Reference
 =============
@@ -323,5 +379,4 @@ TODO
 
 - Add more examples
 - Generation of urls
-- Arguments support in the extended path matcher types
 - Autoescaping in templates
