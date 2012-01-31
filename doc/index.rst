@@ -47,7 +47,54 @@ Thread-Local Globals
 Rendering
 ---------
 
-**TODO**
+Rendering of templates is implemented on top of ERB, and provides a few extensions:
+
+- Lines having ``%`` as the the first non-blank character are interpreted as if they were wrapped in ``<% ... %>`` (ERB supports this out of the box, but ``%`` has to be the first character of the line)
+- There is support for template inheritance similar to what is found in Django templates and Jinja
+- Support for defining macros (a mix between partials and helper methods)
+
+Unlike Rails and Tilt, rendering doesn't share the context of the caller and is implemented in its own separate context.
+
+Rendering is handled by instances of ``Fiasco::Render`` class. Any helper that has to be accessed from the templates, will have to be extended in the renderer instance (with a call to ``extend``):
+
+.. code-block:: ruby
+
+   renderer = Fiasco::Render.new
+   renderer.extend MyHelpersModule
+
+Templates have to be declared with the renderer. There are two kinds of declarations:
+
+- File declarations, which specify a file to be parsed.
+- Inline template declarations, which pass the template contents themselves.
+
+A file declaration looks like this:
+
+.. code-block:: ruby
+
+   renderer.declare(:template_name, path: 'views/template.erb')
+
+An inline declaration looks like this:
+
+.. code-block:: ruby
+
+   renderer.declare(:anoter_template, contents: '<% 10.times %>.<% end %>')
+
+For an example on how to declare automatically all the templates inside a directory tree, check the Idioms section.
+
+Once a template has been declared, it can be renderer:
+
+.. code-block:: ruby
+
+   render[:another_template] # => '..........'
+
+Any variable that is referenced in the template has to be passed explicitly:
+
+.. code-block:: ruby
+
+   render[:template_with_vars, var1: value1, var2: value2]
+   # [] is an alias to render
+   render.render(:template_with_vars, var1: value1, var2: value2)
+
 
 Template Inheritance
 """"""""""""""""""""
@@ -65,18 +112,18 @@ An example macros file looks like this:
 
 .. code-block:: rhtml
    
-   <% macro :input, type: 'text', value: '', size: 20 do |name, type, value, size| %>
+   % macro :input, type: 'text', value: '', size: 20 do |name, type, value, size|
      <input type="<%= type %>" name="<%= name %>" value="<%= value %>" size="<%= size %>">
-   <% end %>
-   <% macro :label, required: false do |text, required| %>
+   % end
+   % macro :label, required: false do |text, required|
      <label><%= text %><% if required %><span class=required>*</span><% end %></label>
-   <% end %>
-   <% macro :field, type: 'text', required: false, label: nil do |type, name, label, required| %>
+   % end
+   % macro :field, type: 'text', required: false, label: nil do |type, name, label, required|
      <div class=field>
-     <% label(text: label || name.gsub(/[-_]/, ' ').capitalize, required: required)
-        input(name: name, type: type) %>
+       % label(text: label || name.gsub(/[-_]/, ' ').capitalize, required: required)
+       % input(name: name, type: type)
      </div>
-   <% end %>
+   % end
 
 Here three macros where defined, ``input``, ``label`` and ``field``.
 
@@ -95,19 +142,19 @@ After loading a macros file, the macros defined on tha file will be available fo
 
 .. code-block:: rhtml
 
-   <% extends :base %>
+   % extends :base
 
-   <% block(:main) do %>
+   % block(:main) do
      <form method=post>
        <fieldset>
-         <% field(name: 'username', value: user.name) %>
-         <% field(name: 'password', type: 'password') %>
-         <% field(name: 'password_confirm', type: 'password') %>
+         % field(name: 'username', value: user.name)
+         % field(name: 'password', type: 'password')
+         % field(name: 'password_confirm', type: 'password')
        </fieldset>
 
        <button>Submit</button>
      </form>
-   <% end %>
+   % end
 
 Arguments are all passed by name, for an alternative implementation check the idioms section.
 
@@ -339,10 +386,10 @@ Let's say you have this macro defined
 
 .. code-block:: rhtml
 
-   <%# Macro that takes 4 named parameters with some defaults defined %>
-   <% macro :input, type: 'text', value: '', size: 20 do |name, type, value, size| %>
+   %# Macro that takes 4 named parameters with some defaults defined
+   % macro :input, type: 'text', value: '', size: 20 do |name, type, value, size|
      <input type="<%= type %>" name="<%= name %>" value="<%= value %>" size="<%= size %>">
-   <% end %>
+   % end
 
 Normally it would be invoked it like this:
 
