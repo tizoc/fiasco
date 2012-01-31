@@ -110,7 +110,7 @@ An example macros file looks like this:
 
 :file:`macros/my_macros.erb`
 
-.. code-block:: rhtml
+.. code-block:: template
    
    % macro :input, type: 'text', value: '', size: 20 do |name, type, value, size|
      <input type="<%= type %>" name="<%= name %>" value="<%= value %>" size="<%= size %>">
@@ -120,8 +120,8 @@ An example macros file looks like this:
    % end
    % macro :field, type: 'text', required: false, label: nil do |type, name, label, required|
      <div class=field>
-       % label(text: label || name.gsub(/[-_]/, ' ').capitalize, required: required)
-       % input(name: name, type: type)
+       % label text: label || name.gsub(/[-_]/, ' ').capitalize, required: required
+       % input name: name, type: type
      </div>
    % end
 
@@ -140,7 +140,7 @@ After loading a macros file, the macros defined on tha file will be available fo
 
 :file:`views/users/signup_form.erb`
 
-.. code-block:: rhtml
+.. code-block:: template
 
    % extends :base
 
@@ -384,7 +384,7 @@ Positional arguments support in macros
 
 Let's say you have this macro defined
 
-.. code-block:: rhtml
+.. code-block:: template
 
    %# Macro that takes 4 named parameters with some defaults defined
    % macro :input, type: 'text', value: '', size: 20 do |name, type, value, size|
@@ -393,13 +393,13 @@ Let's say you have this macro defined
 
 Normally it would be invoked it like this:
 
-.. code-block:: rhtml
+.. code-block:: template
 
    <% input(name: 'username', value: user.name) %>
 
 But lets say you want to support positional arguments (something ``Fiasco::Render`` macros don't implement by default) to invoke it like this:
 
-.. code-block:: rhtml
+.. code-block:: template
 
    <% input('username', value: user.name) %>
 
