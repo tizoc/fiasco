@@ -77,7 +77,7 @@ EOS
         raise ArgumentError.new("Need either path or contents")
       end
 
-      e = ERB.new(contents, nil, '%-', '@render_output')
+      e = ERB.new(contents.gsub(/^\s+%/, '%'), nil, '%-', '@render_output')
       e.filename = options[:path]
 
       yield(e)
