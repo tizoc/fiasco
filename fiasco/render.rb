@@ -118,8 +118,11 @@ EOS
       arguments = b.parameters
       define_singleton_method mname do |named = defaults, &block|
         args = arguments.select{|t| t[0] != :block}.map do |type, name|
-          named.fetch(name, defaults[name]) or
-            raise ArgumentError, "Macro invocation '#{mname}' is missing a required argument: '#{name}'", caller(4)
+          named.fetch(name) do
+            defaults.fetch(name) do
+              raise ArgumentError, "Macro invocation '#{mname}' is missing a required argument: #{name}", caller(10)
+            end
+          end
         end
         b.call(*args, &block)
       end
