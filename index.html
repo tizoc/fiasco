@@ -76,7 +76,7 @@
 <div class="section" id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
 <p>In the examples I use global variables (<tt class="docutils literal"><span class="pre">$app</span></tt>, <tt class="docutils literal"><span class="pre">$request</span></tt>, <tt class="docutils literal"><span class="pre">$env</span></tt> etc), this goes against the &#8220;globals are bad&#8221; dogma and hurts some sensibilities. This is just the way I choose to do things on my apps. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.</p>
-<p>If this doesn&#8217;t work for you you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn&#8217;t prescribe a way of doing things here and it doesn&#8217;t reference any globals internally.</p>
+<p>If this doesn&#8217;t work for you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn&#8217;t prescribe a way of doing things here and it doesn&#8217;t reference any globals internally.</p>
 <p>The same applies to <tt class="docutils literal"><span class="pre">&#64;route</span></tt>. It can be named any way you want, and it doesn&#8217;t have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain &#8216;route&#8217;.</p>
 </div>
 <div class="section" id="getting-started">
@@ -104,7 +104,7 @@
 </div>
 <div class="section" id="rendering">
 <h3>Rendering<a class="headerlink" href="#rendering" title="Permalink to this headline">¶</a></h3>
-<p>Rendering of templates is implemented on top of ERB, and provides a few extensions:</p>
+<p>Rendering of templates is implemented on top of ERB (this is likely to change in the future), and provides a few extensions:</p>
 <ul class="simple">
 <li>Lines having <tt class="docutils literal"><span class="pre">%</span></tt> as the the first non-blank character are interpreted as if they were wrapped in <tt class="docutils literal"><span class="pre">&lt;%</span> <span class="pre">...</span> <span class="pre">%&gt;</span></tt> (ERB supports this out of the box, but <tt class="docutils literal"><span class="pre">%</span></tt> has to be the first character of the line)</li>
 <li>There is support for template inheritance similar to what is found in Django templates and Jinja</li>
@@ -142,7 +142,38 @@
 </div>
 <div class="section" id="template-inheritance">
 <h4>Template Inheritance<a class="headerlink" href="#template-inheritance" title="Permalink to this headline">¶</a></h4>
-<p><strong>TODO</strong></p>
+<p>When building an application with Fiasco, the way the templates are organized is a bit different to what is traditionally done in Ruby.</p>
+<p>First, there is no such thing as a &#8220;layout&#8221; (not in the usual way, templates that fulfill the role of layouts exist, but they are not special to the rendering system).</p>
+<p>First the definition of the template that will be used as the base:</p>
+<p><tt class="file docutils literal"><span class="pre">views/base.erb</span></tt></p>
+<div class="highlight-template"><div class="highlight"><pre><span class="cp">&lt;!doctype html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;&lt;title&gt;</span><span class="cp">&lt;%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span> <span class="k">do</span> <span class="cp">%&gt;</span>My Site<span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span><span class="nt">&lt;/title&gt;&lt;/head&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+<span class="nt">&lt;body</span> <span class="na">class=</span><span class="s">&quot;</span><span class="cp">&lt;%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:body_classes</span><span class="p">)</span> <span class="cp">%&gt;</span><span class="s">&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">wrapper</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;h1&gt;</span><span class="cp">&lt;%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span> <span class="cp">%&gt;</span><span class="nt">&lt;/h1&gt;</span>
+<span class="cp">    %</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:contents</span><span class="p">)</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/body&gt;</span>
+</pre></div>
+</div>
+<p>Each invocation of yield_block will define a named hole in the template that can be referenced in inheriting templates. An optional block can be passed to define the default contents of the block in case the inheriting template doesn&#8217;t define the block contents (or to use in calls to <tt class="docutils literal"><span class="pre">superblock</span></tt> in inheriting templates)</p>
+<p>A &#8220;home&#8221; template that inherits from base is defined like this:</p>
+<p><tt class="file docutils literal"><span class="pre">views/home.erb</span></tt></p>
+<div class="highlight-template"><div class="highlight"><pre><span class="cp">%</span> <span class="kp">extend</span> <span class="ss">:base</span>
+
+<span class="cp">&lt;%</span> <span class="n">block</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span> <span class="k">do</span> <span class="cp">%&gt;&lt;%</span> <span class="n">superblock</span> <span class="cp">%&gt;</span> -- Homepage<span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+<span class="cp">%</span> <span class="n">block</span><span class="p">(</span><span class="ss">:contents</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">main</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;h2&gt;</span>This is the homepage<span class="nt">&lt;/h2&gt;</span>
+  <span class="nt">&lt;/div&gt;</span>
+<span class="cp">%</span> <span class="k">end</span>
+</pre></div>
+</div>
+<p>The call to <tt class="docutils literal"><span class="pre">extend</span></tt> says that this template inherits from a template that was registered under the name &#8216;base&#8217;. The call to <tt class="docutils literal"><span class="pre">block(:title)</span></tt> defines the contents of the <tt class="docutils literal"><span class="pre">title</span></tt> block that was declared on the &#8220;base&#8221; template. It calls <tt class="docutils literal"><span class="pre">superblock</span></tt> and then adds &#8220;&#8211; Homepage&#8221;, the result being &#8220;My Site &#8211; Homepage&#8221;. Because &#8220;title&#8221; was declared twice on the parent template (first for the <tt class="docutils literal"><span class="pre">&lt;title&gt;</span></tt> tag, and then for <tt class="docutils literal"><span class="pre">&lt;h1&gt;</span></tt>) both places are going to be filled with this.</p>
+<p>Then the contents for the <tt class="docutils literal"><span class="pre">contents</span></tt> block are defined, this time without calling <tt class="docutils literal"><span class="pre">superblock</span></tt> (which would be meaningless anyway because no default block was provided for the <tt class="docutils literal"><span class="pre">contents</span></tt> block. The <tt class="docutils literal"><span class="pre">body_classes</span></tt> block is left undefined, and defaults to being empty.</p>
+<p>Inheritance can be arbitrarily deep, here new blocks can be defined with <tt class="docutils literal"><span class="pre">yield_block</span></tt> in <tt class="file docutils literal"><span class="pre">views/home.erb</span></tt> and have other templates inherit from it. Inheriting templates can even declare contents for blocks to which the &#8220;home&#8221; template is defining contents and access to what is defined in &#8220;home&#8221; with calls to <tt class="docutils literal"><span class="pre">superblock</span></tt> in the same way &#8220;home&#8221; access to block contents defined in &#8220;base&#8221;.</p>
 </div>
 <div class="section" id="macros">
 <h4>Macros<a class="headerlink" href="#macros" title="Permalink to this headline">¶</a></h4>
@@ -344,7 +375,7 @@
 </div>
 <div class="section" id="idioms">
 <h2>Idioms<a class="headerlink" href="#idioms" title="Permalink to this headline">¶</a></h2>
-<p>Fiasco doesn&#8217;t provide everything out of the box, and the way some parts are implemented may not be the right one for every project or developer taste. Here is a list of code snippets for modifications you can implement, and idioms for functionality not provided.</p>
+<p>Fiasco doesn&#8217;t provide everything out of the box, and the way some parts are implemented may not be the right one for every project or developer taste. Here is a list of code snippets for modifications that can be implemented, and idioms for functionality not provided.</p>
 <div class="section" id="application-settings">
 <h3>Application settings<a class="headerlink" href="#application-settings" title="Permalink to this headline">¶</a></h3>
 <p>The usual way of solving this problem is to parse a YAML file, and to have different environment names for development, staging and production. A different approach will be shown here.</p>
@@ -500,7 +531,7 @@
 </div>
 <div class="section" id="positional-arguments-support-in-macros">
 <h3>Positional arguments support in macros<a class="headerlink" href="#positional-arguments-support-in-macros" title="Permalink to this headline">¶</a></h3>
-<p>Let&#8217;s say you have this macro defined</p>
+<p>Let&#8217;s say this macro is defined:</p>
 <div class="highlight-template"><div class="highlight"><pre><span class="cp">%</span><span class="c1"># Macro that takes 4 named parameters with some defaults defined</span>
 <span class="cp">%</span> <span class="n">macro</span> <span class="ss">:input</span><span class="p">,</span> <span class="n">type</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="mi">20</span> <span class="k">do</span> <span class="o">|</span><span class="nb">name</span><span class="p">,</span> <span class="n">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">size</span><span class="o">|</span>
   <span class="nt">&lt;input</span> <span class="na">type=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="n">type</span> <span class="cp">%&gt;</span><span class="s">&quot;</span> <span class="na">name=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="nb">name</span> <span class="cp">%&gt;</span><span class="s">&quot;</span> <span class="na">value=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="n">value</span> <span class="cp">%&gt;</span><span class="s">&quot;</span> <span class="na">size=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span> <span class="n">size</span> <span class="cp">%&gt;</span><span class="s">&quot;</span><span class="nt">&gt;</span>

@@ -10,7 +10,7 @@ Notes
 
 In the examples I use global variables (``$app``, ``$request``, ``$env`` etc), this goes against the "globals are bad" dogma and hurts some sensibilities. This is just the way I choose to do things on my apps. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.
 
-If this doesn't work for you you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
+If this doesn't work for you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
 
 The same applies to ``@route``. It can be named any way you want, and it doesn't have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain 'route'.
 
@@ -47,7 +47,7 @@ Thread-Local Globals
 Rendering
 ---------
 
-Rendering of templates is implemented on top of ERB, and provides a few extensions:
+Rendering of templates is implemented on top of ERB (this is likely to change in the future), and provides a few extensions:
 
 - Lines having ``%`` as the the first non-blank character are interpreted as if they were wrapped in ``<% ... %>`` (ERB supports this out of the box, but ``%`` has to be the first character of the line)
 - There is support for template inheritance similar to what is found in Django templates and Jinja
@@ -99,7 +99,49 @@ Any variable that is referenced in the template has to be passed explicitly:
 Template Inheritance
 """"""""""""""""""""
 
-**TODO**
+When building an application with Fiasco, the way the templates are organized is a bit different to what is traditionally done in Ruby.
+
+First, there is no such thing as a "layout" (not in the usual way, templates that fulfill the role of layouts exist, but they are not special to the rendering system).
+
+First the definition of the template that will be used as the base:
+
+:file:`views/base.erb`
+
+.. code-block:: template
+
+   <!doctype html>
+   <html>
+     <head><title><% yield_block(:title) do %>My Site<% end %></title></head>
+   </html>
+   <body class="<% yield_block(:body_classes) %>">
+     <div id=wrapper>
+       <h1><% yield_block(:title) %></h1>
+       % yield_block(:contents)
+     </div>
+   </body>
+
+Each invocation of yield_block will define a named hole in the template that can be referenced in inheriting templates. An optional block can be passed to define the default contents of the block in case the inheriting template doesn't define the block contents (or to use in calls to ``superblock`` in inheriting templates)
+
+A "home" template that inherits from base is defined like this:
+
+:file:`views/home.erb`
+
+.. code-block:: template
+
+   % extend :base
+
+   <% block(:title) do %><% superblock %> -- Homepage<% end %>
+   % block(:contents) do
+     <div class=main>
+       <h2>This is the homepage</h2>
+     </div>
+   % end
+
+The call to ``extend`` says that this template inherits from a template that was registered under the name 'base'. The call to ``block(:title)`` defines the contents of the ``title`` block that was declared on the "base" template. It calls ``superblock`` and then adds "-- Homepage", the result being "My Site -- Homepage". Because "title" was declared twice on the parent template (first for the ``<title>`` tag, and then for ``<h1>``) both places are going to be filled with this.
+
+Then the contents for the ``contents`` block are defined, this time without calling ``superblock`` (which would be meaningless anyway because no default block was provided for the ``contents`` block. The ``body_classes`` block is left undefined, and defaults to being empty.
+
+Inheritance can be arbitrarily deep, here new blocks can be defined with ``yield_block`` in :file:`views/home.erb` and have other templates inherit from it. Inheriting templates can even declare contents for blocks to which the "home" template is defining contents and access to what is defined in "home" with calls to ``superblock`` in the same way "home" access to block contents defined in "base".
 
 Macros
 """"""
@@ -270,7 +312,7 @@ Rendering
 Idioms
 ======
 
-Fiasco doesn't provide everything out of the box, and the way some parts are implemented may not be the right one for every project or developer taste. Here is a list of code snippets for modifications you can implement, and idioms for functionality not provided.
+Fiasco doesn't provide everything out of the box, and the way some parts are implemented may not be the right one for every project or developer taste. Here is a list of code snippets for modifications that can be implemented, and idioms for functionality not provided.
 
 Application settings
 --------------------
@@ -382,7 +424,7 @@ Assuming that a project is structured so that all the template files live under 
 Positional arguments support in macros
 --------------------------------------
 
-Let's say you have this macro defined
+Let's say this macro is defined:
 
 .. code-block:: template
 
