@@ -64,8 +64,6 @@ module Fiasco
 
       catch(:complete) do
         pass
-
-        not_found
       end
     ensure
       ctx.env = ctx.request = ctx.response = ctx.g = nil
@@ -104,7 +102,7 @@ module Fiasco
         env['SCRIPT_NAME'] = captured.matched.gsub(%r{/$}, '')
       end
 
-      _pass(options)
+      _pass(options) # If :complete is thrown the following is skipped
       not_found
     ensure
       env['PATH_INFO'], env['SCRIPT_NAME'] = old_path, old_script
