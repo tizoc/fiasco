@@ -8,7 +8,7 @@
 Notes
 =====
 
-In the examples I use global variables (``$app``, ``$request``, ``$env`` etc), this goes against the "globals are bad" dogma and hurts some sensibilities. This is just the way I choose to do things on my apps. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.
+In the examples I use global variables (``$app``, ``$request``, ``$env`` etc), this goes against the "globals are bad" dogma and hurts some sensibilities. This is just the way I choose to do things on my apps, the globals are not mandatory. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.
 
 If this doesn't work for you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
 
@@ -47,11 +47,17 @@ Thread-Local Globals
 Rendering
 ---------
 
-Rendering of templates is implemented on top of ERB (this is likely to change in the future), and provides a few extensions:
+The templates provided by Fiasco are a mix between ERB and Jinja2.
 
-- Lines having ``%`` as the the first non-blank character are interpreted as if they were wrapped in ``<% ... %>`` (ERB supports this out of the box, but ``%`` has to be the first character of the line)
+Contrasted with ERB:
+
+- Inline code is enclosed in ``{% ... %}`` and contain ruby code. This is the same as ``<% ... %>`` in ERB.
+- Inline value expressions enclosed in ``{{ ... }}`` and contain a ruby expression (generally a variable name). The result of the expression is converted to a string and displayed as part of the output. This is the equivalent of ``<%= ... %>`` in ERB.
+- Comments are similar but enclosed in ``{# ... #}``; the contents are discarded.
+- Whitespace that appears before the opening tag can be trimmed by appending ``-`` to the tag (``{{-``, ``{%-``, ``{#-``), and whitespace after the closing tag can be trimmed by prepending ``-`` to the closing tag (``-}}``, ``-%}``, ``-#}``).
+- Lines having ``%`` as the the first non-blank character are interpreted as if they were wrapped in ``{% ... %}``. The whitespace from the beggining of the line up to ``%`` is stripped.
 - There is support for template inheritance similar to what is found in Django templates and Jinja
-- Support for defining macros (a mix between partials and helper methods)
+- Support for defining macros (a mix between partials and helper methods), similar to what Jinja2 provides.
 
 Unlike Rails and Tilt, rendering doesn't share the context of the caller and is implemented in its own separate context.
 
@@ -71,13 +77,13 @@ A file declaration looks like this:
 
 .. code-block:: ruby
 
-   renderer.declare(:template_name, path: 'views/template.erb')
+   renderer.declare(:template_name, path: 'views/template.html')
 
 An inline declaration looks like this:
 
 .. code-block:: ruby
 
-   renderer.declare(:anoter_template, contents: '<% 10.times %>.<% end %>')
+   renderer.declare(:anoter_template, contents: '{% 10.times %}.{% end %}')
 
 For an example on how to declare automatically all the templates inside a directory tree, check the Idioms section.
 
@@ -105,17 +111,17 @@ First, there is no such thing as a "layout" (not in the usual way, templates tha
 
 First the definition of the template that will be used as the base:
 
-:file:`views/base.erb`
+:file:`views/base.html`
 
 .. code-block:: template
 
    <!doctype html>
    <html>
-     <head><title><% yield_block(:title) do %>My Site<% end %></title></head>
+     <head><title>{% yield_block(:title) do %}My Site{% end %}</title></head>
    </html>
-   <body class="<% yield_block(:body_classes) %>">
+   <body class="{% yield_block(:body_classes) %}">
      <div id=wrapper>
-       <h1><% yield_block(:title) %></h1>
+       <h1>{% yield_block(:title) %}</h1>
        % yield_block(:contents)
      </div>
    </body>
@@ -124,13 +130,13 @@ Each ``yield_block`` invocation defines a named block hole in the template that 
 
 A *"home"* template that inherits from base is defined like this:
 
-:file:`views/home.erb`
+:file:`views/home.html`
 
 .. code-block:: template
 
    % extend :base
 
-   <% block(:title) do %><% superblock %> -- Homepage<% end %>
+   {% block(:title) do %}{% superblock %} -- Homepage{% end %}
    % block(:contents) do
      <div class=main>
        <h2>This is the homepage</h2>
@@ -141,7 +147,7 @@ The call to ``extend`` says that this template inherits from a template that was
 
 Then the contents for the ``contents`` block are defined, this time without calling ``superblock`` (which would be meaningless anyway because no default block was provided for the ``contents`` block. The ``body_classes`` block is left undefined, and defaults to being empty.
 
-Inheritance can be arbitrarily deep, here new blocks can be defined with ``yield_block`` in :file:`views/home.erb` and have other templates inherit from it. Inheriting templates can even declare contents for blocks to which the *"home"* template is defining contents and access to what is defined in *"home"* with calls to ``superblock`` in the same way *"home"* access to block contents defined in *"base"*.
+Inheritance can be arbitrarily deep, here new blocks can be defined with ``yield_block`` in :file:`views/home.html` and have other templates inherit from it. Inheriting templates can even declare contents for blocks to which the *"home"* template is defining contents and access to what is defined in *"home"* with calls to ``superblock`` in the same way *"home"* access to block contents defined in *"base"*.
 
 Macros
 """"""
@@ -150,17 +156,18 @@ Macros are similar in concept to what utility "partials" are in Rails or Sinatra
 
 An example macros file looks like this:
 
-:file:`macros/my_macros.erb`
+:file:`macros/my_macros.html`
 
 .. code-block:: template
    
    % macro :input, type: 'text', value: '', size: 20 do |name, type, value, size|
-     <input type="<%= type %>" name="<%= name %>" value="<%= value %>" size="<%= size %>">
+     <input type="{{type}}" name="{{name}}" value="{{value}}" size="{{size}}">
    % end
    % macro :label, required: false do |text, required|
-     <label><%= text %><% if required %><span class=required>*</span><% end %></label>
+     <label>{{text}}{% if required %}<span class=required>*</span>{% end %}</label>
    % end
-   % macro :field, type: 'text', required: false, label: nil do |type, name, label, required|
+   % macro :field, type: 'text', required: false,\
+   %               label: nil do |type, name, label, required|
      <div class=field>
        % label text: label || name.gsub(/[-_]/, ' ').capitalize, required: required
        % input name: name, type: type
@@ -176,11 +183,11 @@ To load this file with your renderer object:
 .. code-block:: ruby
 
    renderer = Fiasco::Render.new
-   render.load_macros(path: 'macros/my_macros.erb')
+   render.load_macros(path: 'macros/my_macros.html')
 
 After loading a macros file, the macros defined on tha file will be available for templates to invoke like in the following example:
 
-:file:`views/users/signup_form.erb`
+:file:`views/users/signup_form.html`
 
 .. code-block:: template
 
@@ -412,11 +419,11 @@ Assuming that a project is structured so that all the template files live under 
 
     $render = Fiasco::Render.new
 
-    Dir['./templates/**/*.erb'].each do |path|
-      # 'templates/home.erb' will be named 'home' ($render['home'])
-      # 'templates/albums/edit.erb' will be named 'albums/edit' ($render['albums/edit'])
+    Dir['./templates/**/*.html'].each do |path|
+      # 'templates/home.html' will be named 'home' ($render['home'])
+      # 'templates/albums/edit.html' will be named 'albums/edit' ($render['albums/edit'])
       # etc
-      name = path.gsub(/\.erb$/, '').gsub('./views/', '')
+      name = path.gsub(/\.html$/, '').gsub('./views/', '')
       $render.declare(name, path: path)
     end
 
@@ -430,20 +437,20 @@ Let's say this macro is defined:
 
    %# Macro that takes 4 named parameters with some defaults defined
    % macro :input, type: 'text', value: '', size: 20 do |name, type, value, size|
-     <input type="<%= type %>" name="<%= name %>" value="<%= value %>" size="<%= size %>">
+     <input type="{{type}}" name="{{name}}" value="{{value}}" size="{{size}}">
    % end
 
 Normally it would be invoked it like this:
 
 .. code-block:: template
 
-   <% input(name: 'username', value: user.name) %>
+   {% input(name: 'username', value: user.name) %}
 
 But lets say you want to support positional arguments (something ``Fiasco::Render`` macros don't implement by default) to invoke it like this:
 
 .. code-block:: template
 
-   <% input('username', value: user.name) %>
+   {% input('username', value: user.name) %}
 
 Here is how it is done:
 
