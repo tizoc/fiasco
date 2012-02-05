@@ -1,13 +1,16 @@
 require 'set'
-require 'erb'
+require_relative 'template_compiler'
 
 module Fiasco
   class Render
+    Entry = Struct.new(:body, :filename)
+
     def initialize
       @content_blocks = Hash.new {|h,k| h[k] = [] }
       @template_locals = Hash.new {|h,k| h[k] = Set.new }
       @templates = {}
       @compiled = Set.new
+      @compiler = TemplateCompiler.new
     end
 
     def block(key, &b)
@@ -42,11 +45,11 @@ module Fiasco
       @extends = [base, args]
     end
 
-    def _compile(name, erb, locals = [])
+    def _compile(name, entry, locals = [])
       src = "params ||= {}; @render_output ||= ''; "
       locals.each {|var| src += "#{var} = params[:#{var}]; "}
       src << "\n"
-      src << erb.src.gsub("#coding:UTF-8\n", '')
+      src << @compiler.compile(entry.body)
       src << "\n@render_output"
 
       meth = <<-EOS
@@ -55,7 +58,7 @@ define_singleton_method(:'__view__#{name}') do |params|
 #{src}
 end
 EOS
-      eval(meth, binding, erb.filename || '(ERB)', -2)
+      eval(meth, binding, entry.filename || "(TEMPLATE:#{name})", -2)
     end
 
     def _process_locals(name, locals)
@@ -77,10 +80,9 @@ EOS
         raise ArgumentError.new("Need either path or contents")
       end
 
-      e = ERB.new(contents.gsub(/^\s+%/, '%'), nil, '%-', '@render_output')
-      e.filename = options[:path]
+      entry = Entry.new(contents, options[:path])
 
-      yield(e)
+      yield(entry)
     end
 
     def declare(name, options = {})
