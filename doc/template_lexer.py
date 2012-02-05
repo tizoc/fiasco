@@ -14,16 +14,10 @@ from pygments.token import Error, Punctuation, \
 from pygments.util import html_doctype_matches, looks_like_xml
 
 
-class ExtErbLexer(ErbLexer):
-    # Override to support '%' as first not blank char
-    _block_re = re.compile(r'(<%%|%%>|<%=|<%#|<%-|<%|-%>|%>|^\s*%[^%].*?$)', re.M)
+class AdaptedErbLexer(ErbLexer):
+    _block_re = re.compile(r'({{-|{{|{#-|{#|{%-|{%|-}}|-#}|-%}|%}|}}|#}|^\s*%[^%].*?$)', re.M)
 
     def get_tokens_unprocessed(self, text):
-        """
-        Since ERB doesn't allow "<%" and other tags inside of ruby
-        blocks we have to use a split approach here that fails for
-        that too.
-        """
         tokens = self._block_re.split(text)
         tokens.reverse()
         state = idx = 0
@@ -38,20 +32,16 @@ class ExtErbLexer(ErbLexer):
                 # block starts
                 elif state == 1:
                     tag = tokens.pop()
-                    # literals
-                    if tag in ('<%%', '%%>'):
-                        yield idx, Other, tag
-                        idx += 3
-                        state = 0
+
                     # comment
-                    elif tag == '<%#':
+                    if tag in ('{#', '{#-'):
                         yield idx, Comment.Preproc, tag
                         val = tokens.pop()
                         yield idx + 3, Comment, val
                         idx += 3 + len(val)
                         state = 2
                     # blocks or output
-                    elif tag in ('<%', '<%=', '<%-'):
+                    elif tag in ('{%', '{{', '{%-', '{{-'):
                         yield idx, Comment.Preproc, tag
                         idx += len(tag)
                         data = tokens.pop()
@@ -61,13 +51,12 @@ class ExtErbLexer(ErbLexer):
                             yield r_idx + idx, r_token, r_value
                         idx += len(data)
                         state = 2
-                    elif tag in ('%>', '-%>'):
+                    elif tag in ('%}', '-%}', '}}', '-}}', '#}', '-#}'):
                         yield idx, Error, tag
                         idx += len(tag)
                         state = 0
                     # % raw ruby statements
                     else:
-                        # Modified here for Fiasco
                         spaces = tag.index('%') + 1
                         yield idx, Comment.Preproc, tag[0:spaces]
                         r_idx = 0
@@ -79,7 +68,7 @@ class ExtErbLexer(ErbLexer):
                 # block ends
                 elif state == 2:
                     tag = tokens.pop()
-                    if tag not in ('%>', '-%>'):
+                    if tag not in ('%}', '-%}', '}}', '-}}', '#}', '-#}'):
                         yield idx, Other, tag
                     else:
                         yield idx, Comment.Preproc, tag
@@ -88,9 +77,9 @@ class ExtErbLexer(ErbLexer):
         except IndexError:
             return
 
-class ExtRhtmlLexer(RhtmlLexer):
+class FiascoTemplateLexer(RhtmlLexer):
     def __init__(self, **options):
-        super(RhtmlLexer, self).__init__(HtmlLexer, ExtErbLexer, **options)
+        super(RhtmlLexer, self).__init__(HtmlLexer, AdaptedErbLexer, **options)
 
 def setup(sphinx):
-    sphinx.add_lexer('template', ExtRhtmlLexer())
+    sphinx.add_lexer('template', FiascoTemplateLexer())
