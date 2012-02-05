@@ -41,25 +41,25 @@ $render = Fiasco::Render.new
 $render.declare 'base', contents: <<-EOT
 <!doctype html>
 <html>
-  <head><title><% yield_block(:title) do %>Default Title<% end %></title><head>
+  <head><title>{% yield_block(:title) do %}Default Title{% end %}</title><head>
   <body>
-    <h1><% yield_block(:title) %></h1>
-    <% yield_block(:contents) do %><% end %>
+    <h1>{% yield_block(:title) %}</h1>
+    {% yield_block(:contents) do %}{% end %}
   </body>
 </html>
 EOT
 
 $render.declare 'home', contents: <<-EOT
-<% extends :base %>
-<% block(:title) do %><% superblock %> | Home Page<% end %>
+{% extends :base %}
+{% block(:title) do %}{% superblock %} | Home Page{% end %}
 EOT
 
 $render.declare 'hello', contents: <<-EOT
-<% extends :base %>
-<% block(:title) do %>Hello Page<% end %>
-<% block(:contents) do %>
-  Hello <%= name %>!
-<% end %>
+{% extends :base %}
+{% block(:title) do %}Hello Page{% end %}
+{% block(:contents) do %}
+  Hello {{name}}!
+{% end %}
 EOT
 
 module BasicHandler
