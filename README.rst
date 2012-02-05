@@ -7,6 +7,29 @@ fi·as·co
    #. a complete and ignominious failure.
    #. a round-bottomed glass flask for wine, especially Chianti, fitted with a woven, protective raffia basket that also enables the bottle to stand upright.
 
+
+Quick glance
+============
+
+.. code-block:: ruby
+
+   require 'fiasco'
+
+   $app = Fiasco::Application.new
+
+   module Handler
+     extend self
+     @route = Fiasco::Mapper.bind(self, $app)
+
+     @route["/"]
+     def hello
+       $app.response.write "Hello World!"
+     end
+   end
+
+   $app.add_handler(Handler)
+   run $app
+
 Summary
 =======
 
