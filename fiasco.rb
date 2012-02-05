@@ -33,8 +33,8 @@ module Fiasco
 
     def _calculate_params(target, captures)
       # TODO: handle rest arguments
-      @handler_arguments ||= target.method(handler).parameters
-      @handler_arguments.map{|kind, name| captures[name]}
+      @params ||= target.method(handler).parameters
+      @params.map{|kind, name| captures[name]}
     end
   end
 
@@ -51,7 +51,10 @@ module Fiasco
       @ctx = ThreadLocalProxy.new
       @handlers = []
       @mappings = []
-      @default_path_matcher = options.fetch(:default_path_matcher)
+      @default_path_matcher = options.fetch(:default_path_matcher) do
+        require_relative 'fiasco/extended_path_matcher'
+        ExtendedPathMatcher
+      end
     end
 
     def call(env)
