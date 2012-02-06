@@ -83,7 +83,7 @@ An inline declaration looks like this:
 
 .. code-block:: ruby
 
-   renderer.declare(:anoter_template, contents: '{% 10.times %}.{% end %}')
+   renderer.declare(:anoter_template, contents: '{% 10.times do %}.{% end %}')
 
 For an example on how to declare automatically all the templates inside a directory tree, check the Idioms section.
 
