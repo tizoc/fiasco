@@ -10,7 +10,7 @@ Notes
 
 In the examples I use global variables (``$app``, ``$request``, ``$env`` etc), this goes against the "globals are bad" dogma and hurts some sensibilities. This is just the way I choose to do things on my apps, the globals are not mandatory. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.
 
-If this doesn't work for you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
+For anyone to whom this doesn't work, other approaches can be used; like defining a constant inside the namespace where your application lives for storing those references. Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
 
 The same applies to ``@route``. It can be named any way you want, and it doesn't have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain 'route'.
 
