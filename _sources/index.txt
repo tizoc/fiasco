@@ -10,7 +10,7 @@ Notes
 
 In the examples I use global variables (``$app``, ``$request``, ``$env`` etc), this goes against the "globals are bad" dogma and hurts some sensibilities. This is just the way I choose to do things on my apps, the globals are not mandatory. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.
 
-If this doesn't work for you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
+For anyone to whom this doesn't work, other approaches can be used; like defining a constant inside the namespace where your application lives for storing those references. Fiasco doesn't prescribe a way of doing things here and it doesn't reference any globals internally.
 
 The same applies to ``@route``. It can be named any way you want, and it doesn't have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain 'route'.
 
@@ -27,7 +27,21 @@ Overview
 Routing
 -------
 
-**TODO**
+**This section is incomplete**
+
+Routes are defined by *mappings* from a *request matcher* (defined by multiple *rules*) to an *endpoint*. An *endpoint* is the combination of *receiver* (either a module or class instance) and a method.
+
+Any module or class can be a *receiver*, and also a *handler*. Instances of classes that are *receivers* can be *handlers* too (which is useful for building *parametrized handlers*).
+
+*handlers* have to be registered with the application object (an instance of Fiasco::Application) for them to be called when a request is matched against a *request matcher*.
+
+When serving a request, the application object iterates over all the registered *handlers* in the same order they were registered and tries to match the request with all the *mappings* defined for the *receiver* that corresponds to the current *handler*.
+
+If no *handler* owns a *mapping* that can match the request, then the status of the response is finished with a status code 404 assigned to it.
+
+If a *handler* with a *mapping* that matches the request is found, then the corresponding *endpoint* is invoked on that *handler*.
+
+*request matcher* objects (instances of Fiasco::Matcher) receive an environment and return false if the request doesn't match, or if the request matches, an instance of Fiasco::Captures filled with the values captured by the *rules* that the *request matcher* defines.
 
 URL Resolution
 """"""""""""""
@@ -83,7 +97,7 @@ An inline declaration looks like this:
 
 .. code-block:: ruby
 
-   renderer.declare(:anoter_template, contents: '{% 10.times %}.{% end %}')
+   renderer.declare(:anoter_template, contents: '{% 10.times do %}.{% end %}')
 
 For an example on how to declare automatically all the templates inside a directory tree, check the Idioms section.
 
@@ -118,13 +132,13 @@ First the definition of the template that will be used as the base:
    <!doctype html>
    <html>
      <head><title>{% yield_block(:title) do %}My Site{% end %}</title></head>
+     <body class="{% yield_block(:body_classes) %}">
+       <div id=wrapper>
+         <h1>{% yield_block(:title) %}</h1>
+         % yield_block(:contents)
+       </div>
+     </body>
    </html>
-   <body class="{% yield_block(:body_classes) %}">
-     <div id=wrapper>
-       <h1>{% yield_block(:title) %}</h1>
-       % yield_block(:contents)
-     </div>
-   </body>
 
 Each ``yield_block`` invocation defines a named block hole in the template that can be referenced in inheriting templates. An optional block can be passed to define the default contents of the block in case the inheriting template doesn't define the block contents (or to use in calls to ``superblock`` in inheriting templates)
 
@@ -182,7 +196,7 @@ To load this file with your renderer object:
 
 .. code-block:: ruby
 
-   renderer = Fiasco::Render.new
+   render = Fiasco::Render.new
    render.load_macros(path: 'macros/my_macros.html')
 
 After loading a macros file, the macros defined on tha file will be available for templates to invoke like in the following example:

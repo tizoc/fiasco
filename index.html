@@ -97,7 +97,7 @@
 <div class="section" id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
 <p>In the examples I use global variables (<tt class="docutils literal"><span class="pre">$app</span></tt>, <tt class="docutils literal"><span class="pre">$request</span></tt>, <tt class="docutils literal"><span class="pre">$env</span></tt> etc), this goes against the &#8220;globals are bad&#8221; dogma and hurts some sensibilities. This is just the way I choose to do things on my apps, the globals are not mandatory. Also keep in mind that Fiasco implements thread-local proxies, which means that the data stored in such globals are not shared between threads.</p>
-<p>If this doesn&#8217;t work for you can always use other approaches like defining a constant inside the namespace where your application lives for storing those references. It is up to you, Fiasco doesn&#8217;t prescribe a way of doing things here and it doesn&#8217;t reference any globals internally.</p>
+<p>For anyone to whom this doesn&#8217;t work, other approaches can be used; like defining a constant inside the namespace where your application lives for storing those references. Fiasco doesn&#8217;t prescribe a way of doing things here and it doesn&#8217;t reference any globals internally.</p>
 <p>The same applies to <tt class="docutils literal"><span class="pre">&#64;route</span></tt>. It can be named any way you want, and it doesn&#8217;t have to be an instance variable, the reason I use it as an instance variable is that it stands out more than a plain &#8216;route&#8217;.</p>
 </div>
 <div class="section" id="getting-started">
@@ -109,7 +109,14 @@
 <p><strong>TODO</strong></p>
 <div class="section" id="routing">
 <h3>Routing<a class="headerlink" href="#routing" title="Permalink to this headline">¶</a></h3>
-<p><strong>TODO</strong></p>
+<p><strong>This section is incomplete</strong></p>
+<p>Routes are defined by <em>mappings</em> from a <em>request matcher</em> (defined by multiple <em>rules</em>) to an <em>endpoint</em>. An <em>endpoint</em> is the combination of <em>receiver</em> (either a module or class instance) and a method.</p>
+<p>Any module or class can be a <em>receiver</em>, and also a <em>handler</em>. Instances of classes that are <em>receivers</em> can be <em>handlers</em> too (which is useful for building <em>parametrized handlers</em>).</p>
+<p><em>handlers</em> have to be registered with the application object (an instance of Fiasco::Application) for them to be called when a request is matched against a <em>request matcher</em>.</p>
+<p>When serving a request, the application object iterates over all the registered <em>handlers</em> in the same order they were registered and tries to match the request with all the <em>mappings</em> defined for the <em>receiver</em> that corresponds to the current <em>handler</em>.</p>
+<p>If no <em>handler</em> owns a <em>mapping</em> that can match the request, then the status of the response is finished with a status code 404 assigned to it.</p>
+<p>If a <em>handler</em> with a <em>mapping</em> that matches the request is found, then the corresponding <em>endpoint</em> is invoked on that <em>handler</em>.</p>
+<p><em>request matcher</em> objects (instances of Fiasco::Matcher) receive an environment and return false if the request doesn&#8217;t match, or if the request matches, an instance of Fiasco::Captures filled with the values captured by the <em>rules</em> that the <em>request matcher</em> defines.</p>
 <div class="section" id="url-resolution">
 <h4>URL Resolution<a class="headerlink" href="#url-resolution" title="Permalink to this headline">¶</a></h4>
 <p><strong>TODO</strong></p>
@@ -152,7 +159,7 @@
 </pre></div>
 </div>
 <p>An inline declaration looks like this:</p>
-<div class="highlight-ruby"><div class="highlight"><pre><span class="n">renderer</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="ss">:anoter_template</span><span class="p">,</span> <span class="n">contents</span><span class="p">:</span> <span class="s1">&#39;{% 10.times %}.{% end %}&#39;</span><span class="p">)</span>
+<div class="highlight-ruby"><div class="highlight"><pre><span class="n">renderer</span><span class="o">.</span><span class="n">declare</span><span class="p">(</span><span class="ss">:anoter_template</span><span class="p">,</span> <span class="n">contents</span><span class="p">:</span> <span class="s1">&#39;{% 10.times do %}.{% end %}&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For an example on how to declare automatically all the templates inside a directory tree, check the Idioms section.</p>
@@ -175,13 +182,13 @@
 <div class="highlight-template"><div class="highlight"><pre><span class="cp">&lt;!doctype html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;&lt;title&gt;</span><span class="cp">{%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span> <span class="k">do</span> <span class="cp">%}</span>My Site<span class="cp">{%</span> <span class="k">end</span> <span class="cp">%}</span><span class="nt">&lt;/title&gt;&lt;/head&gt;</span>
+  <span class="nt">&lt;body</span> <span class="na">class=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:body_classes</span><span class="p">)</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">wrapper</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;h1&gt;</span><span class="cp">{%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span> <span class="cp">%}</span><span class="nt">&lt;/h1&gt;</span>
+<span class="cp">      %</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:contents</span><span class="p">)</span>
+    <span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-<span class="nt">&lt;body</span> <span class="na">class=</span><span class="s">&quot;</span><span class="cp">{%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:body_classes</span><span class="p">)</span> <span class="cp">%}</span><span class="s">&quot;</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">wrapper</span><span class="nt">&gt;</span>
-    <span class="nt">&lt;h1&gt;</span><span class="cp">{%</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span> <span class="cp">%}</span><span class="nt">&lt;/h1&gt;</span>
-<span class="cp">    %</span> <span class="n">yield_block</span><span class="p">(</span><span class="ss">:contents</span><span class="p">)</span>
-  <span class="nt">&lt;/div&gt;</span>
-<span class="nt">&lt;/body&gt;</span>
 </pre></div>
 </div>
 <p>Each <tt class="docutils literal"><span class="pre">yield_block</span></tt> invocation defines a named block hole in the template that can be referenced in inheriting templates. An optional block can be passed to define the default contents of the block in case the inheriting template doesn&#8217;t define the block contents (or to use in calls to <tt class="docutils literal"><span class="pre">superblock</span></tt> in inheriting templates)</p>
@@ -224,7 +231,7 @@
 <p>Here three macros where defined, <tt class="docutils literal"><span class="pre">input</span></tt>, <tt class="docutils literal"><span class="pre">label</span></tt> and <tt class="docutils literal"><span class="pre">field</span></tt>.</p>
 <p><tt class="docutils literal"><span class="pre">macro</span></tt> arguments are a name for the macro, a list of default values for the macro arguments (optional), and a block that defines the body of the macro. <tt class="docutils literal"><span class="pre">input</span></tt> for example takes one required argument <tt class="docutils literal"><span class="pre">name:</span></tt> and three optional arguments <tt class="docutils literal"><span class="pre">type:</span></tt>, <tt class="docutils literal"><span class="pre">value:</span></tt> and <tt class="docutils literal"><span class="pre">size:</span></tt> because they have defaults defined.</p>
 <p>To load this file with your renderer object:</p>
-<div class="highlight-ruby"><div class="highlight"><pre><span class="n">renderer</span> <span class="o">=</span> <span class="no">Fiasco</span><span class="o">::</span><span class="no">Render</span><span class="o">.</span><span class="n">new</span>
+<div class="highlight-ruby"><div class="highlight"><pre><span class="n">render</span> <span class="o">=</span> <span class="no">Fiasco</span><span class="o">::</span><span class="no">Render</span><span class="o">.</span><span class="n">new</span>
 <span class="n">render</span><span class="o">.</span><span class="n">load_macros</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="s1">&#39;macros/my_macros.html&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
