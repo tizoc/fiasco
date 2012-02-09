@@ -118,13 +118,13 @@ First the definition of the template that will be used as the base:
    <!doctype html>
    <html>
      <head><title>{% yield_block(:title) do %}My Site{% end %}</title></head>
+     <body class="{% yield_block(:body_classes) %}">
+       <div id=wrapper>
+         <h1>{% yield_block(:title) %}</h1>
+         % yield_block(:contents)
+       </div>
+     </body>
    </html>
-   <body class="{% yield_block(:body_classes) %}">
-     <div id=wrapper>
-       <h1>{% yield_block(:title) %}</h1>
-       % yield_block(:contents)
-     </div>
-   </body>
 
 Each ``yield_block`` invocation defines a named block hole in the template that can be referenced in inheriting templates. An optional block can be passed to define the default contents of the block in case the inheriting template doesn't define the block contents (or to use in calls to ``superblock`` in inheriting templates)
 
@@ -182,7 +182,7 @@ To load this file with your renderer object:
 
 .. code-block:: ruby
 
-   renderer = Fiasco::Render.new
+   render = Fiasco::Render.new
    render.load_macros(path: 'macros/my_macros.html')
 
 After loading a macros file, the macros defined on tha file will be available for templates to invoke like in the following example:
