@@ -27,7 +27,21 @@ Overview
 Routing
 -------
 
-**TODO**
+**This section is incomplete**
+
+Routes are defined by *mappings* from a *request matcher* (defined by multiple *rules*) to an *endpoint*. An *endpoint* is the combination of *receiver* (either a module or class instance) and a method.
+
+Any module or class can be a *receiver*, and also a *handler*. Instances of classes that are *receivers* can be *handlers* too (which is useful for building *parametrized handlers*).
+
+*handlers* have to be registered with the application object (an instance of Fiasco::Application) for them to be called when a request is matched against a *request matcher*.
+
+When serving a request, the application object iterates over all the registered *handlers* in the same order they were registered and tries to match the request with all the *mappings* defined for the *receiver* that corresponds to the current *handler*.
+
+If no *handler* owns a *mapping* that can match the request, then the status of the response is finished with a status code 404 assigned to it.
+
+If a *handler* with a *mapping* that matches the request is found, then the corresponding *endpoint* is invoked on that *handler*.
+
+*request matcher* objects (instances of Fiasco::Matcher) receive an environment and return false if the request doesn't match, or if the request matches, an instance of Fiasco::Captures filled with the values captured by the *rules* that the *request matcher* defines.
 
 URL Resolution
 """"""""""""""
