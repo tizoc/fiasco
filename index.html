@@ -111,12 +111,29 @@
 <h3>Routing<a class="headerlink" href="#routing" title="Permalink to this headline">¶</a></h3>
 <p><strong>This section is incomplete</strong></p>
 <p>Routes are defined by <em>mappings</em> from a <em>request matcher</em> (defined by multiple <em>rules</em>) to an <em>endpoint</em>. An <em>endpoint</em> is the combination of <em>receiver</em> (either a module or class instance) and a method.</p>
+<div class="highlight-ruby"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyReceiver</span> <span class="c1"># MyReceiver is a receiver</span>
+  <span class="c1"># @route is a mapper object bound to the application and to MyReceiver</span>
+  <span class="vi">@route</span> <span class="o">=</span> <span class="no">Fiasco</span><span class="o">::</span><span class="no">Mapper</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="nb">self</span><span class="p">,</span> <span class="vg">$app</span><span class="p">)</span>
+
+  <span class="vi">@route</span><span class="o">[</span><span class="s1">&#39;/home&#39;</span><span class="o">]</span> <span class="c1"># Pushes a matcher to the stack, with one rule defined:</span>
+                  <span class="c1"># the PATH has to be equal to &#39;/home&#39;</span>
+  <span class="k">def</span> <span class="nf">home</span> <span class="c1"># Defines a method on the receiver with one matcher on the stack.</span>
+    <span class="o">.</span><span class="n">.</span><span class="o">.</span>    <span class="c1"># For each matcher on the stack, a mapping from the matcher to</span>
+  <span class="k">end</span>      <span class="c1"># this endpoint (MyReceiver#home) is registered with the</span>
+           <span class="c1"># application object bound to the mapper.</span>
+<span class="k">end</span>
+
+<span class="c1"># We register an instance of MyReceiver as a handler</span>
+<span class="vg">$app</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span><span class="no">MyReceiver</span><span class="o">.</span><span class="n">new</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Any module or class can be a <em>receiver</em>, and also a <em>handler</em>. Instances of classes that are <em>receivers</em> can be <em>handlers</em> too (which is useful for building <em>parametrized handlers</em>).</p>
 <p><em>handlers</em> have to be registered with the application object (an instance of Fiasco::Application) for them to be called when a request is matched against a <em>request matcher</em>.</p>
 <p>When serving a request, the application object iterates over all the registered <em>handlers</em> in the same order they were registered and tries to match the request with all the <em>mappings</em> defined for the <em>receiver</em> that corresponds to the current <em>handler</em>.</p>
-<p>If no <em>handler</em> owns a <em>mapping</em> that can match the request, then the status of the response is finished with a status code 404 assigned to it.</p>
+<p>If no <em>mapping</em> that can match the request is found, then the status of the response is finished with a status code 404 assigned to it.</p>
 <p>If a <em>handler</em> with a <em>mapping</em> that matches the request is found, then the corresponding <em>endpoint</em> is invoked on that <em>handler</em>.</p>
 <p><em>request matcher</em> objects (instances of Fiasco::Matcher) receive an environment and return false if the request doesn&#8217;t match, or if the request matches, an instance of Fiasco::Captures filled with the values captured by the <em>rules</em> that the <em>request matcher</em> defines.</p>
+<p>The captures are passed by name to the method handling the request. This means that if the order of arguments in the method declaration are different to the order of captured framents in the request PATH, the captures will sill be bound to the names expected.</p>
 <div class="section" id="url-resolution">
 <h4>URL Resolution<a class="headerlink" href="#url-resolution" title="Permalink to this headline">¶</a></h4>
 <p><strong>TODO</strong></p>
