@@ -33,7 +33,7 @@ module Fiasco
           when '%'         then yield [:code_line, inner]
           end
 
-          prev_open_tag, open_tag = open_tag, nil
+          open_tag = nil
         else
           scanner.scan(OPENERS)
           before, open_tag = scanner[1], scanner[2]
@@ -115,9 +115,9 @@ EOT
   if result != expected
     puts "Not equal:"
     puts "===Expected==="
-    puts expected.gsub(/ +$/){|s| '~' * s.length}
+    puts expected.gsub(/ +$/){|sp| '~' * sp.length}
     puts "===Rendered==="
-    puts result.gsub(/ +$/){|s| '~' * s.length}
+    puts result.gsub(/ +$/){|sp| '~' * sp.length}
 
     exit 1
   end
