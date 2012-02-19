@@ -59,6 +59,7 @@ define_singleton_method(:'__view__#{name}') do |params|
 end
 EOS
       eval(meth, binding, entry.filename || "(TEMPLATE:#{name})", -2)
+      @compiled << name
     end
 
     def _process_locals(name, locals)
