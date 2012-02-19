@@ -5,6 +5,9 @@ require_relative 'fiasco/global_state'
 require_relative 'fiasco/thread_local_proxy'
 
 module Fiasco
+  class InvalidResponseError < ArgumentError
+  end
+
   class Captures < Struct.new(:matched, :named, :remaining)
     def [](name)
       named[name.to_s]
@@ -39,12 +42,11 @@ module Fiasco
   end
 
   class Application
-    Context = Struct.new(:captures, :g, :env, :request, :response)
+    Context = Struct.new(:captures, :g, :env, :request)
     attr_reader :mappings, :default_path_matcher, :ctx
 
     extend Forwardable
-    context_attributes = %w[env env= captures captures=
-                            request request= response response=]
+    context_attributes = %w[env env= captures captures= request request=]
     def_delegators :ctx, *context_attributes
 
     def initialize(options = {})
@@ -57,19 +59,40 @@ module Fiasco
       end
     end
 
+    def _to_response(result, status = 200)
+      case result
+      when Rack::Response then
+        result.finish
+      when String then
+        headers = {}
+        unless (100..199).include?(status) || status == 204 || status == 304
+          headers['Content-Length'] = result.bytesize.to_s
+          headers['Content-Type'] = 'text/html'
+        end
+        [status, headers, [result]]
+      when Array then
+        case result.length
+        when 2 then _to_response(result[0], result[1])
+        when 3 then result
+        else raise InvalidResponseError, "Array responses must have lenght of 2 or 3 #{result.inspect}"
+        end
+      else
+        raise InvalidResponseError, "Can't handle objects of type '%s'" % result.class.name
+      end
+    end
+
     def call(env)
       ctx.__setobj__(Context.new) if !ctx
       ctx.captures = []
       ctx.env = env
       ctx.request = Rack::Request.new(env)
-      ctx.response = Rack::Response.new
       ctx.g = GlobalState.new
 
-      catch(:complete) do
-        pass
+      catch(:halt) do
+        _to_response(pass)
       end
     ensure
-      ctx.env = ctx.request = ctx.response = ctx.g = nil
+      ctx.env = ctx.request = ctx.g = nil
     end
 
     def _pass(options = {})
@@ -86,14 +109,16 @@ module Fiasco
           if captured = mapping.matcher.matches?(env)
             begin
               captures.push(captured)
-              mapping.invoke(target, captured)
-              throw(:complete, response.finish)
+              response = mapping.invoke(target, captured)
+              return response
             ensure
               captures.pop
             end
           end
         end
       end
+
+      not_found
     end
 
     def pass(options = {})
@@ -105,15 +130,14 @@ module Fiasco
         env['SCRIPT_NAME'] = captured.matched.gsub(%r{/$}, '')
       end
 
-      _pass(options) # If :complete is thrown the following is skipped
-      not_found
+      _pass(options) || not_found
     ensure
       env['PATH_INFO'], env['SCRIPT_NAME'] = old_path, old_script
     end
 
     def not_found
-      response.status = 404
-      response.finish
+      response = [404, {'Content-Length' => '0', 'Content-Type' => 'text/html'}, []]
+      throw(:halt, response)
     end
 
     def add_handler(object)

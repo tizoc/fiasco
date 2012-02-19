@@ -20,7 +20,6 @@ $app = Fiasco::Application.new(default_path_matcher: Fiasco::ExtendedPathMatcher
 # These globals are thread-local proxies to the actual data
 $g = Fiasco::Proxy.new{$app.ctx.g} # Global store
 $request = Fiasco::Proxy.new{$app.ctx.request} # Rack Request object
-$response = Fiasco::Proxy.new{$app.ctx.response} # Rack Response object
 $env = Fiasco::Proxy.new{$app.ctx.env} # Rack env
 
 # The renderer is responsible for compiling and rendering templates
@@ -72,16 +71,11 @@ module BasicHandler
 
 module_function
 
-  # A normal method (a helper)
-  def out(value)
-    $response.write(value)
-  end
-
   # Route for the root
   @route["/"]
   def home
     # Render#[] is an alias for Render#render
-    out $render['home']
+    $render['home']
   end
 
   # Many mappings can be defined for the same handler method
@@ -89,7 +83,7 @@ module_function
   @route["/hello", defaults: {name: "World"}]
   @route["/hello/<name>"]
   def hello(name)
-    out $render['hello', name: name]
+    $render['hello', name: name]
   end
 
   # Handler methods can call other handler methods
@@ -106,7 +100,7 @@ module_function
   # they are matched by name.
   @route.push("/sum/<int:num2>/<int:num1>")
   def sum(num1, num2)
-    out num1 + num2
+    (num1 + num2).to_s
   end
 
   # Mapper#capture defines a "capturing" mapping.
@@ -118,8 +112,7 @@ module_function
   # Try visiting "/capturing/Hello/sum/10/33"
   @route.capture("/capturing/<string:title>/")
   def capturing(title)
-    out "<h1>#{title}</h1>"
-    $app.pass
+    "<h1>#{title}</h1>" + $app.pass
   end
 end
 
