@@ -114,6 +114,7 @@ EOS
       _render(name, locals)
     ensure
       @content_blocks.clear
+      @render_output = nil
     end
 
     alias_method :[], :render
