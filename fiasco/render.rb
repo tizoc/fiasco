@@ -10,7 +10,8 @@ module Fiasco
       @template_locals = Hash.new {|h,k| h[k] = Set.new }
       @templates = {}
       @compiled = Set.new
-      @compiler = TemplateCompiler.new
+      display_value = lambda{|literal| "__tmp = (#{literal}); display_value(__tmp)"}
+      @compiler = TemplateCompiler.new(display_value: display_value)
     end
 
     def block(key, &b)
@@ -118,6 +119,11 @@ EOS
     end
 
     alias_method :[], :render
+
+    def display_value(value)
+      str = value.to_s
+      value.tainted? ? Rack::Utils.escape(str) : str
+    end
 
     def macro(mname, defaults = {}, &b)
       arguments = b.parameters
