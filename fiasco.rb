@@ -8,6 +8,16 @@ module Fiasco
   class InvalidResponseError < ArgumentError
   end
 
+  class Request < Rack::Request
+    def response
+      @response ||= respond
+    end
+
+    def respond(*args)
+      Rack::Response.new(*args)
+    end
+  end
+
   class Captures < Struct.new(:matched, :named, :remaining)
     def [](name)
       named[name.to_s]
@@ -59,37 +69,15 @@ module Fiasco
       end
     end
 
-    def _to_response(result, status = 200)
-      case result
-      when Rack::Response then
-        result.finish
-      when String then
-        headers = {}
-        unless (100..199).include?(status) || status == 204 || status == 304
-          headers['Content-Length'] = result.bytesize.to_s
-          headers['Content-Type'] = 'text/html'
-        end
-        [status, headers, [result]]
-      when Array then
-        case result.length
-        when 2 then _to_response(result[0], result[1])
-        when 3 then result
-        else raise InvalidResponseError, "Array responses must have lenght of 2 or 3 #{result.inspect}"
-        end
-      else
-        raise InvalidResponseError, "Can't handle objects of type '%s'" % result.class.name
-      end
-    end
-
     def call(env)
       ctx.__setobj__(Context.new) if !ctx
       ctx.captures = []
       ctx.env = env
-      ctx.request = Rack::Request.new(env)
+      ctx.request = Request.new(env)
       ctx.g = GlobalState.new
 
       catch(:halt) do
-        _to_response(pass)
+        ResponseAdapter.to_response(self, pass)
       end
     ensure
       ctx.env = ctx.request = ctx.g = nil
@@ -199,6 +187,30 @@ module Fiasco
     def map(target, method)
       while matcher = @stack.pop
         @app.mappings.push(Mapping.new(matcher, target, method, nil))
+      end
+    end
+  end
+
+  module ResponseAdapter
+    module_function
+
+    def to_response(app, result, status = nil)
+      case result
+      when Rack::Response then
+        result.finish
+      when String then
+        response = app.request.response
+        response.write(result)
+        response.status = status unless status.nil?
+        response.finish
+      when Array then
+        case result.length
+        when 2 then to_response(app, result[0], result[1])
+        when 3 then result
+        else raise InvalidResponseError, "Array responses must have lenght of 2 or 3 #{result.inspect}"
+        end
+      else
+        raise InvalidResponseError, "Can't handle objects of type '%s'" % result.class.name
       end
     end
   end
