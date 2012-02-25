@@ -7,7 +7,7 @@ module Fiasco
 
     def initialize
       @content_blocks = Hash.new {|h,k| h[k] = [] }
-      @template_locals = Hash.new {|h,k| h[k] = Set.new }
+      @template_locals = Hash.new {|h,k| h[k] = [] }
       @templates = {}
       @compiled = Set.new
       display_value = lambda{|literal| "__tmp = (#{literal}); display_value(__tmp)"}
@@ -64,11 +64,11 @@ EOS
     end
 
     def _process_locals(name, locals)
-      variables = Set.new(locals.keys)
       seen_variables = @template_locals[name]
+      diff = local.keys - seen_variables
 
-      unless (variables - seen_variables).empty?
-        seen_variables += variables
+      unless diff.empty?
+        seen_variables += diff
         @compiled.delete(name)
       end
 
