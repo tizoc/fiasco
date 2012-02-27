@@ -65,7 +65,7 @@ EOS
 
     def _process_locals(name, locals)
       seen_variables = @template_locals[name]
-      diff = local.keys - seen_variables
+      diff = locals.keys - seen_variables
 
       unless diff.empty?
         seen_variables += diff
