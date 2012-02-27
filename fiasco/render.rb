@@ -10,7 +10,7 @@ module Fiasco
       @template_locals = Hash.new {|h,k| h[k] = [] }
       @templates = {}
       @compiled = Set.new
-      display_value = lambda{|literal| "__tmp = (#{literal}); display_value(__tmp)"}
+      display_value = lambda{|literal| "(__tmp = (#{literal}); display_value(__tmp))"}
       @compiler = TemplateCompiler.new(display_value: display_value)
     end
 
