@@ -3,7 +3,7 @@ require 'strscan'
 module Fiasco
   class TemplateCompiler
     OPENERS = /(.*?)(^[ \t]*%|\{%-?|\{\{-?|\{#-?|\z)/m
-    DEFAULT_DISPLAY_VALUE = lambda{|literal| "(#{literal}).to_s"}
+    DEFAULT_DISPLAY_VALUE = lambda{|outvar, literal| "#{outvar} << (#{literal}).to_s"}
     DEFAULT_DISPLAY_TEXT = lambda{|text| text.dump}
 
     def initialize(options = {})
@@ -65,7 +65,7 @@ module Fiasco
         when :code, :code_line
           src << data
         when :display
-          src << "#{@output_var} << #{@display_value.(data)}"
+          src << @display_value.(@output_var, data)
         when :comment
           # skip
         end
