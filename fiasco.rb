@@ -55,7 +55,8 @@ module Fiasco
 
   class Application
     Context = Struct.new(:captures, :g, :env, :request)
-    attr_reader :mappings, :default_path_matcher, :ctx
+
+    attr_reader :mappings, :default_path_matcher, :ctx, :response_adapters
 
     extend Forwardable
     context_attributes = %w[env env= captures captures= request request=]
@@ -69,6 +70,7 @@ module Fiasco
         require_relative 'fiasco/extended_path_matcher'
         ExtendedPathMatcher
       end
+      @response_adapters = ResponseAdapterRegistry.new(self)
     end
 
     def call(env)
@@ -78,9 +80,8 @@ module Fiasco
       ctx.request = Request.new(env)
       ctx.g = GlobalState.new
 
-      catch(:halt) do
-        ResponseAdapter.to_response(self, pass)
-      end
+      response = catch(:halt) {pass}
+      @response_adapters.adapt(response)
     ensure
       ctx.env = ctx.request = ctx.g = nil
     end
@@ -192,6 +193,25 @@ module Fiasco
       while matcher = @stack.pop
         @app.mappings.push(Mapping.new(matcher, target, method, nil))
       end
+    end
+  end
+
+  class ResponseAdapterRegistry
+    def initialize(app)
+      @app = app
+      @adapters = []
+    end
+
+    def register(predicate, conversion)
+      @adapters << [predicate, conversion]
+    end
+
+    def adapt(response)
+      @adapters.each do |predicate, conversion|
+        response = conversion.call(@app, response) if predicate === response
+      end
+
+      response
     end
   end
 
