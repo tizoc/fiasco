@@ -9,6 +9,8 @@ module Fiasco
   end
 
   class Request < Rack::Request
+    attr_accessor :captures
+
     def response
       @response ||= respond
     end
@@ -96,7 +98,9 @@ module Fiasco
 
           if captured = mapping.matcher.matches?(env)
             begin
+              ctx.request.captures = captured
               captures.push(captured)
+              # TODO: request mapping
               response = mapping.invoke(target, captured)
               return response
             ensure
