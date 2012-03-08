@@ -124,7 +124,7 @@ EOS
 
     def display_value(value)
       str = value.to_s
-      value.tainted? ? Rack::Utils.escape(str) : str
+      value.tainted? ? Rack::Utils.escape_html(str) : str
     end
 
     def macro(mname, defaults = {}, &b)
